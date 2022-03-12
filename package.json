@@ -1,0 +1,30 @@
+{
+  "name": "only-scroll",
+  "version": "0.1.0",
+  "description": "smooth-scroll",
+  "main": "dist/onlyScroll.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build" : "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VitoBravis/only-scroll.git"
+  },
+  "keywords": [
+    "smooth-scroll",
+    "smooth",
+    "scroll"
+  ],
+  "author": "Andrei Martin <vitobravis@gmail.com>",
+  "license": "MIT",
+  "files": ["dist/**/*"],
+  "bugs": {
+    "url": "https://github.com/VitoBravis/only-scroll/issues"
+  },
+  "homepage": "https://github.com/VitoBravis/only-scroll#readme",
+  "devDependencies": {
+    "@types/node": "^17.0.21",
+    "typescript": "^4.6.2"
+  }
+}
