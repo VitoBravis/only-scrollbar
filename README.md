@@ -53,7 +53,7 @@ const scroll = new OnlyScroll('#scroll-container-id', {
 Для обращения к свойствам и методам класса `OnlyScroll`, требуется создать экземпляр класса
 
 ```ts
-import OnlyScroll from 'only-scroll';
+import OnlyScroll from 'only-scrollbar';
 
 const scroll = new OnlyScroll('.scroll-container');
 scroll.destroy();
