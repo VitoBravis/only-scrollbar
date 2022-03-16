@@ -1,23 +1,22 @@
-declare type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
-declare type Easing = 'default';
-declare type ClassNames = {
-    [key in string]: string;
-};
+type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
+type Easing = 'default';
+type ClassNames = { [key in string]: string }
 /**
  * @description Направление скрола
  * @description 1 = Up, -1 = Down
  */
-export declare type Direction = -1 | 1;
+export type Direction = -1 | 1
 /**
  * @description Функция-обработчик для события скрола
  */
-export declare type EventHandler = (e: Event) => void;
+export type EventHandler = (e: Event) => void;
+
 export interface OnlyScrollOptions {
     /**
      * @description Сила инерции в формате числа от 0 до 1
      * @default 1
      */
-    dumping?: number;
+    damping?: number;
     /**
      * @description Контейнер, на который будут применяться события скрола
      * @default scrollContainer
@@ -28,123 +27,335 @@ export interface OnlyScrollOptions {
      */
     easing?: Easing;
 }
+
 /**
- * @todo Вынести все оаписания типов в отдельный файл
+ * @description Набор настроек скрола по умолчанию
+ */
+const defaultOptions = {
+    damping: 1,
+    easing: "default",
+}
+
+/**
+ * @description Список клавиш, нажатие которых должно вызывать событие по синхронизации позиции скрола
+ */
+const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'PageDown', 'PageUp', 'Home', 'End', ' '];
+
+/**
  * @todo Задокументировать приватные методы и поля класса
- * @todo Настроить нормальную сборку с минифицированием собранных файлов
  * @todo Добавить поддержку горизонтального скрола
  * @todo Добавить поддержку дополнительных кривых Безье
  */
+
 /**
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
  * @version 0.1.0
  */
-declare class OnlyScroll {
+class OnlyScroll {
     /**
      * @description Объект со всеми css-классами, которые используются в скроле
      */
-    readonly classNames: ClassNames;
+    public readonly classNames: ClassNames = {
+        container: 'only-scroll-container',
+        lock: 'only-scroll--is-locked',
+    };
     /**
      * @description HTML-элемент, котороый будет являться контейнером для скрола
      * @description Для корректной работы размеры контейнера должны быть ограничены
      */
-    readonly scrollContainer: HTMLElement;
+    public readonly scrollContainer: HTMLElement;
     /**
      * @description HTML-элемент, на который будут применяться все события
      * @default OnlyScroll.scrollContainer
      */
-    readonly eventContainer: Element | Window;
+    public readonly eventContainer: HTMLElement | Window;
     /**
      * @description Текущее ускорение скрола. Во внутренних расчетах не используется
      */
-    velocity: number;
+    public velocity: number;
     /**
      * @description Текущий прогресс скрола, в числовом представлении от 0 до 100
      */
-    progress: number;
+    public progress: number;
     /**
      * @description Состояние, отображающее блокировку скрола
      */
-    isLocked: boolean;
-    private readonly dumping;
-    private readonly navKeys;
-    private syncTo;
-    private rafID;
-    private easedY;
-    private lastY;
-    private targetY;
-    private scrollY;
-    private lastPosition;
-    private lastDirection;
-    private lastHash;
-    constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollOptions);
+    public isLocked: boolean;
+
+    private readonly damping: number;
+    private readonly navKeys: string[];
+    private syncTo: NodeJS.Timeout | undefined;
+    private rafID: number | null;
+    private easedY: number;
+    private lastY: number;
+    private targetY: number;
+    private scrollY: number;
+    private lastPosition: number;
+    private lastDirection: Direction | null;
+    private lastHash: string;
+
+    constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollOptions) {
+        const _scrollContainer =  this.findElementBySelector(element);
+
+        if (!_scrollContainer) throw new Error('scrollElement does not exist');
+
+        this.scrollContainer = _scrollContainer;
+
+        /** @todo Двойная проверка выглядит не оптимально, но пока оставлю так */
+        const _eventContainer = this.findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
+        this.eventContainer = _eventContainer === document.scrollingElement ? window : _eventContainer;
+
+        this.scrollY = 0;
+        this.easedY = 0;
+        this.targetY = 0;
+        this.lastY = 0;
+        this.velocity = 0;
+        this.progress = 0;
+        this.lastPosition = 0;
+        this.lastDirection = null;
+        this.isLocked = false;
+        this.rafID = null
+        this.damping = (options?.damping ?? defaultOptions.damping) * 0.1;
+        this.navKeys = defaultNavKeys;
+        this.lastHash = window.location.hash;
+
+        this.init();
+    }
+
     /**
      * @description Последнее направление скрола в числовом представлении
      * @description 1 = Up, -1 = Down
      */
-    get direction(): Direction;
+    public get direction(): Direction {
+        return this.scrollY > this.lastPosition ? 1 : -1
+    }
+
     /**
      * @description Текущее значение позиции скрола
      */
-    get y(): number;
+    public get y(): number {
+        return this.scrollY;
+    }
+
     /**
      * @description Обновление направления скрола. Также устанавливает на scrollContainer атрибут data-scroll-direction со значениями "up" | "down"
      * @description Вызывается автоматически на скрол, но можно вызывать вручную на случай непредвиденных ошибок
      * @todo Сделать приватным методом, когда всё точно будет норм работать
      */
-    updateDirection: () => void;
+    public updateDirection = () => {
+        this.lastPosition = this.scrollY;
+        this.scrollY = this.scrollContainer.scrollTop;
+        if (this.direction !== this.lastDirection) {
+            this.scrollContainer.dataset.scrollDirection = this.direction === 1 ? "down" : "up";
+            this.lastDirection = this.direction;
+        }
+    }
+
     /**
      * @description Синхронизация всех значений, которые используются для расчета позиций
      * @description Вызывается автоматически по окончанию событий скрола, но можно вызвать вручную для преждевременной синхронизации и обнуления анимации
      */
-    sync: () => void;
+    public sync = () => {
+        this.syncPos();
+        this.rafID = null
+    }
+
     /**
      * @description Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений
      * @param positionY {number} - Числовое значение целевой позиции скрола
      */
-    scrollTo: (positionY: number) => void;
+    public scrollTo = (positionY: number) => {
+        this.targetY = positionY;
+        this.tick();
+    }
+
     /**
      * @description Установка конкретного значения скрол позиции, без применения каких-либо анимаций
      * @param value {number} - Числовое значение целевой позиции скрола
      */
-    setValue: (value: number) => void;
+    public setValue = (value: number) => {
+        this.scrollContainer.scrollTop = value;
+        this.sync()
+    }
+
     /**
      * @description Блокирует скрол
      * @description Блокировка также прервет запущенные процессы по перерасчету позиции
      */
-    lock: () => void;
+    public lock = () => {
+        this.scrollContainer.classList.add(this.classNames.lock);
+        this.isLocked = true
+    }
+
     /**
      * @description Разблокирует скрол, запускает перерасчет позиции скрола
      */
-    unlock: () => void;
+    public unlock = () => {
+        this.scrollContainer.classList.remove(this.classNames.lock);
+        this.isLocked = false;
+        this.tick();
+    }
+
     /**
      * @description Добавляет обработчик события скрола на eventContainer
      * @param eventHandler {function} - Стандартная функция обработчик события скрола
      */
-    addScrollListener: (eventHandler: EventHandler) => void;
+    public addScrollListener = (eventHandler: EventHandler) => {
+        this.eventContainer.addEventListener('scroll', eventHandler)
+    }
+
     /**
      * @description Удаляет существующий обработчик события скрола на eventContainer
      * @param eventHandler {function} - Стандартная функция обработчик события скрола
      */
-    removeScrollListener: (eventHandler: EventHandler) => void;
+    public removeScrollListener = (eventHandler: EventHandler) => {
+        this.eventContainer.removeEventListener('scroll', eventHandler)
+    }
+
     /**
      * @description Очистка событий, таймеров, классов и атрибутов
      * @description Не очищает сторонние обработчики, добавленные через addScrollListener
      */
-    destroy: () => void;
-    private findElementBySelector;
-    private init;
-    private initEvents;
-    private findInitialAnchor;
-    private onScroll;
-    private onKeyUp;
-    private onWheel;
-    private syncPos;
-    private checkSyncTo;
-    private wheelCalculate;
-    private manageParentScrollbars;
-    private tick;
+    public destroy = () => {
+        if (this.syncTo) clearTimeout(this.syncTo);
+        (<HTMLElement>this.scrollContainer).style.removeProperty('overflow');
+        this.scrollContainer.classList.remove(...Object.values(this.classNames));
+        this.scrollContainer.removeAttribute('data-scroll-direction');
+
+        window.removeEventListener("keyup", this.onKeyUp);
+        this.eventContainer.removeEventListener("scroll", this.onScroll);
+        this.eventContainer.removeEventListener("wheel", this.onWheel);
+    }
+
+    private findElementBySelector = (selector: ElementOrSelector | null | undefined) => {
+        if (selector !== window && selector !== document.scrollingElement) {
+            return typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : <HTMLElement>selector;
+        } else {
+            return <HTMLElement>document.scrollingElement ?? document.body;
+        }
+    }
+
+    private init = () => {
+        (<HTMLElement>this.scrollContainer).style.overflow = 'auto';
+        this.scrollContainer.classList.add(this.classNames.container);
+
+        this.initEvents();
+        this.findInitialAnchor();
+    }
+
+    private initEvents = () => {
+        if (this.eventContainer === window && "scrollRestoration" in history) {
+            history.scrollRestoration = "manual";
+        }
+
+        window.addEventListener("keyup", this.onKeyUp, { passive: true });
+        this.eventContainer.addEventListener("scroll", this.onScroll, { passive: true });
+        this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
+    }
+
+    private findInitialAnchor = () => {
+        if (window.location.hash) {
+            const anchor = document.querySelector<HTMLElement>(window.location.hash);
+
+            if (anchor) {
+                requestAnimationFrame(() => this.setValue(anchor.offsetTop))
+            }
+        } else {
+            this.setValue(0);
+        }
+    }
+
+    private onScroll = () => {
+        if (this.isLocked) return;
+
+        this.updateDirection();
+
+        if (window.location.hash !== this.lastHash) {
+            this.lastHash = window.location.hash;
+            return void this.syncPos();
+        }
+
+        if (Math.abs(this.scrollY - this.easedY) > window.innerHeight * 0.5) {
+            this.checkSyncTo();
+        }
+    }
+
+    private onKeyUp = (e: KeyboardEvent) => {
+        if (this.isLocked || ~this.navKeys.indexOf(e.key)) return;
+
+        this.checkSyncTo();
+    }
+
+    private onWheel = (e: Event) => {
+        e.preventDefault();
+
+        this.manageParentScrollbars(<HTMLElement>e.target);
+
+        if (this.isLocked) return;
+
+        this.targetY += this.wheelCalculate(<WheelEvent>e).pixelY;
+        this.targetY = Math.min(this.targetY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight);
+        this.targetY = Math.max(this.targetY, 0);
+
+        if (this.rafID === null) {
+            this.tick();
+        }
+    }
+
+    private syncPos = () => {
+        this.easedY = this.scrollContainer.scrollTop;
+        this.targetY = this.scrollContainer.scrollTop;
+        this.lastY = this.scrollContainer.scrollTop;
+    }
+
+    private checkSyncTo = () => {
+        if (this.syncTo) clearTimeout(this.syncTo);
+        this.syncTo = setTimeout(this.syncPos, 200);
+    }
+
+    private wheelCalculate = (wheelEvent: WheelEvent) => {
+        let deltaY = wheelEvent.deltaY;
+        let deltaX = wheelEvent.deltaX;
+
+        if (wheelEvent.deltaMode) {
+            const deltaMultiply = wheelEvent.deltaMode == 1 ? 40 : 800;
+            deltaX *= deltaMultiply;
+            deltaY *= deltaMultiply;
+        }
+
+        return {
+            spinX: deltaX < 1 ? -1 : 1,
+            spinY: deltaY < 1 ? -1 : 1,
+            pixelX: deltaX,
+            pixelY: deltaY
+        }
+    }
+
+    private manageParentScrollbars = (currentTarget: HTMLElement) => {
+        if (currentTarget.closest(`.${this.classNames.container}`) !== this.scrollContainer) {
+            !this.isLocked && this.lock();
+        } else  {
+            this.isLocked && this.unlock();
+        }
+    }
+
+    private tick = () => {
+        if (this.isLocked) return;
+
+        this.easedY = +((1 - this.damping) * this.easedY + this.damping * this.targetY).toFixed(2);
+        this.scrollContainer.scrollTop = Math.round(this.easedY);
+
+        if (this.lastY === this.easedY) {
+            return this.rafID = null;
+        }
+
+        this.lastY = this.easedY;
+        this.velocity = parseInt((this.targetY - this.easedY).toString());
+        this.progress = Math.round(this.easedY / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
+        this.rafID = requestAnimationFrame(this.tick);
+    }
 }
-export default OnlyScroll;
+
+export default OnlyScroll
