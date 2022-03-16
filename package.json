@@ -1,6 +1,6 @@
 {
   "name": "only-scroll",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "smooth-scroll",
   "main": "dist/onlyScroll.js",
   "scripts": {

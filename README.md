@@ -63,24 +63,24 @@ scroll.destroy();
 ```
 
 - Свойства
-    - [OnlyScroll.classNames](#OnlyScroll.classNames)
-    - [OnlyScroll.scrollContainer](#OnlyScroll.scrollContainer)
-    - [OnlyScroll.eventContainer](#OnlyScroll.eventContainer)
-    - [OnlyScroll.velocity](#OnlyScroll.velocity)
-    - [OnlyScroll.progress](#OnlyScroll.progress)
-    - [OnlyScroll.isLocked](#OnlyScroll.isLocked)
-    - [OnlyScroll.direction](#OnlyScroll.direction)
-    - [OnlyScroll.isLocked](#OnlyScroll.isLocked)
+    - [OnlyScroll.classNames](#onlyScrollclassNames)
+    - [OnlyScroll.scrollContainer](#onlyscrollscrollContainer)
+    - [OnlyScroll.eventContainer](#onlyscrolleventContainer)
+    - [OnlyScroll.velocity](#onlyscrollvelocity)
+    - [OnlyScroll.progress](#onlyscrollprogress)
+    - [OnlyScroll.isLocked](#onlyscrollisLocked)
+    - [OnlyScroll.direction](#onlyscrolldirection)
+    - [OnlyScroll.isLocked](#onlyscrollisLocked)
 
 - Методы
-    - [OnlyScroll.sync](#OnlyScroll.sync)
-    - [OnlyScroll.scrollTo](#OnlyScroll.scrollTo)
-    - [OnlyScroll.setValue](#OnlyScroll.setValue)
-    - [OnlyScroll.lock](#OnlyScroll.lock)
-    - [OnlyScroll.unlock](#OnlyScroll.unlock)
-    - [OnlyScroll.addScrollListener](#OnlyScroll.addScrollListener)
-    - [OnlyScroll.removeScrollListener](#OnlyScroll.removeScrollListener)
-    - [OnlyScroll.destroy](#OnlyScroll.destroy)
+    - [OnlyScroll.sync](#onlyscrollsync)
+    - [OnlyScroll.scrollTo](#onlyscrollscrollTo)
+    - [OnlyScroll.setValue](#onlyscrollsetValue)
+    - [OnlyScroll.lock](#onlyscrolllock)
+    - [OnlyScroll.unlock](#onlyscrollunlock)
+    - [OnlyScroll.addScrollListener](#onlyscrolladdScrollListener)
+    - [OnlyScroll.removeScrollListener](#onlyscrollremoveScrollListener)
+    - [OnlyScroll.destroy](#onlyscrolldestroy)
 
 ### Свойства
 
