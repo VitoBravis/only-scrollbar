@@ -7,7 +7,7 @@
 С помощью npm:
 
 ```bash
-npm install only-scroll
+npm install only-scrollbar
 ```
 
 ## Использование
@@ -15,7 +15,7 @@ npm install only-scroll
 Рекомендуется использование синтаксиса ES6, с применением `import` 
 
 ```ts
-import OnlyScroll from 'only-scroll';
+import OnlyScroll from 'only-scrollbar';
 
 const scroll = new OnlyScroll(document.querySelector('.scroll-container'));
 ```
@@ -40,7 +40,7 @@ const scroll = new OnlyScroll(document.querySelector('.scroll-container'));
 | easing | `string` | `'default'` | Временно не использующийся параметр, предполагается выбор дополнительных Безье функций  |
 
 ```ts
-import OnlyScroll from 'only-scroll';
+import OnlyScroll from 'only-scrollbar';
 
 const scroll = new OnlyScroll('#scroll-container-id', {
     damping: 0.8,
