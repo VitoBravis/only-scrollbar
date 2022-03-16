@@ -1,5 +1,5 @@
 {
-  "name": "only-scroll",
+  "name": "only-scrollbar",
   "version": "0.1.1",
   "description": "smooth-scroll",
   "main": "dist/onlyScroll.js",
@@ -9,20 +9,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VitoBravis/only-scroll.git"
+    "url": "git+https://gitlab.com/VitoBravis/only-scrollbar"
   },
   "keywords": [
     "smooth-scroll",
     "smooth",
-    "scroll"
+    "scroll",
+    "javascript"
   ],
   "author": "Andrei Martin <vitobravis@gmail.com>",
   "license": "MIT",
   "files": ["dist/**/*"],
   "bugs": {
-    "url": "https://github.com/VitoBravis/only-scroll/issues"
+    "url": "https://gitlab.com/VitoBravis/only-scrollbar/-/issues"
   },
-  "homepage": "https://github.com/VitoBravis/only-scroll#readme",
+  "homepage": "https://gitlab.com/VitoBravis/only-scrollbar#onlyscroll",
   "devDependencies": {
     "@types/node": "^17.0.21",
     "typescript": "^4.6.2"
