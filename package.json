@@ -3,8 +3,8 @@
   "version": "0.1.1",
   "description": "smooth-scroll",
   "main": "dist/onlyScroll.js",
+  "types": "dist/onlyScroll.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build" : "tsc"
   },
   "repository": {
