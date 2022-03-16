@@ -28,15 +28,15 @@ const scroll = new OnlyScroll(document.querySelector('.scroll-container'));
 
 | argument | type | description |
 | :-------: | :--: | :---------- |
-| element | `HTMLHtmlElement | Element | Window | string | null | undefined` | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является основным контейнером внутри котрого происходит скрол и все расчеты |
-| element | `OnlyScrollOptions | undefined` | Параметры инициализации |
+| element | `HTMLHtmlElement \| Element \| Window \| string \| null \| undefined` | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является основным контейнером внутри котрого происходит скрол и все расчеты |
+| element | `OnlyScrollOptions \| undefined` | Параметры инициализации |
 
 ## Возможные параметры инициализации (OnlyScrollOptions)
 
 | parameter | type | default | description |
 | :-------: | :--: | :-----: | :---------- |
 | damping | `number` | `1` | Сила замедления инерции. Рекомендуется указывать значения в промежутке от 0 до 1 |
-| eventContainer | `HTMLHtmlElement | Element | Window | string` | scrollContainer | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является элементом, который будет обрабатывать события, предназначавшиеся скрол контейнеру. По умолчанию равен основному скрол контейнеру |
+| eventContainer | `HTMLHtmlElement \| Element \| Window \| string` | scrollContainer | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является элементом, который будет обрабатывать события, предназначавшиеся скрол контейнеру. По умолчанию равен основному скрол контейнеру |
 | easing | `string` | `'default'` | Временно не использующийся параметр, предполагается выбор дополнительных Безье функций  |
 
 ```ts
