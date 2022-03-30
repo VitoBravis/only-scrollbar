@@ -95,7 +95,7 @@ class OnlyScroll {
     private lastPosition: number;
     private lastDirection: Direction | null;
     private lastHash: string;
-    private listeners = new Set<EventHandler>()
+    private listeners: Set<EventHandler>;
 
     constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollOptions) {
         const _scrollContainer =  this.findElementBySelector(element);
@@ -121,6 +121,7 @@ class OnlyScroll {
         this.damping = (options?.damping ?? defaultOptions.damping) * 0.1;
         this.navKeys = defaultNavKeys;
         this.lastHash = window.location.hash;
+        this.listeners = new Set();
 
         this.init();
     }
@@ -357,6 +358,9 @@ class OnlyScroll {
         this.lastY = this.easedY;
         this.velocity = parseInt((this.targetY - this.easedY).toString());
         this.progress = Math.round(this.easedY / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
+        if (this.rafID) {
+            cancelAnimationFrame(this.rafID);
+        }
         this.rafID = requestAnimationFrame(this.tick);
     }
 }
