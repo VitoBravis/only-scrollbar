@@ -51,7 +51,7 @@ const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Page
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.2.2
+ * @version 0.2.3
  */
 class OnlyScroll {
     /**
