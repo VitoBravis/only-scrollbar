@@ -6,6 +6,7 @@ module.exports = {
     output: {
         path: path.join(__dirname, 'dist'),
         filename: 'onlyScroll.js',
+        globalObject: 'this',
         library: {
             type: "umd",
             name: "OnlyScroll",
