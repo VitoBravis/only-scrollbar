@@ -95,6 +95,7 @@ class OnlyScroll {
     private lastPosition: number;
     private lastDirection: Direction | null;
     private lastHash: string;
+    private listeners = new Set<EventHandler>()
 
     constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollOptions) {
         const _scrollContainer =  this.findElementBySelector(element);
@@ -204,6 +205,7 @@ class OnlyScroll {
      */
     public addScrollListener = (eventHandler: EventHandler) => {
         this.eventContainer.addEventListener('scroll', eventHandler)
+        this.listeners.add(eventHandler)
     }
 
     /**
@@ -212,11 +214,11 @@ class OnlyScroll {
      */
     public removeScrollListener = (eventHandler: EventHandler) => {
         this.eventContainer.removeEventListener('scroll', eventHandler)
+        this.listeners.delete(eventHandler);
     }
 
     /**
      * @description Очистка событий, таймеров, классов и атрибутов
-     * @description Не очищает сторонние обработчики, добавленные через addScrollListener
      */
     public destroy = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
@@ -227,6 +229,7 @@ class OnlyScroll {
         window.removeEventListener("keyup", this.onKeyUp);
         this.eventContainer.removeEventListener("scroll", this.onScroll);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
+        Array.from(this.listeners.values()).forEach((listener) => this.removeScrollListener(listener));
     }
 
     private findElementBySelector = (selector: ElementOrSelector | null | undefined) => {

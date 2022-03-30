@@ -233,8 +233,6 @@ const scrollHandler = () => {
 scroll.addScrollListener(scrollHandler);
 ```
 
-> Обработчики, добавленные через `addScrollListener` не удалаяются автоматически при вызове `destroy`
-
 #### OnlyScroll.removeScrollListener
 
 ```ts
@@ -261,5 +259,3 @@ scroll.destroy(): void
 ```
 
 Очистка событий, таймеров, классов и атрибутов
-
-> Не очищает сторонние обработчики, добавленные через `addScrollListener`
