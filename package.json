@@ -5,7 +5,8 @@
   "main": "dist/onlyScroll.js",
   "types": "dist/onlyScroll.d.ts",
   "scripts": {
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
