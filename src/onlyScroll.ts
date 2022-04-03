@@ -1,6 +1,7 @@
 type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
 type Easing = 'default';
-type ClassNames = { [key in string]: string }
+type ClassNamesKeys = 'container' | 'lock';
+type ClassNames = { [key in ClassNamesKeys]: string };
 /**
  * @description Направление скрола
  * @description 1 = Up, -1 = Down
@@ -22,9 +23,6 @@ export interface OnlyScrollOptions {
      * @default scrollContainer
      */
     eventContainer?: ElementOrSelector | Window;
-    /**
-     *  @todo: Пока не используется, планируется редактируемость кривой Безье
-     */
     easing?: Easing;
 }
 
@@ -42,16 +40,10 @@ const defaultOptions = {
 const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'PageDown', 'PageUp', 'Home', 'End', ' '];
 
 /**
- * @todo Задокументировать приватные методы и поля класса
- * @todo Добавить поддержку горизонтального скрола
- * @todo Добавить поддержку дополнительных кривых Безье
- */
-
-/**
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.2.4
+ * @version 0.2.5
  */
 class OnlyScroll {
     /**
@@ -104,7 +96,6 @@ class OnlyScroll {
 
         this.scrollContainer = _scrollContainer;
 
-        /** @todo Двойная проверка выглядит не оптимально, но пока оставлю так */
         const _eventContainer = this.findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
         this.eventContainer = _eventContainer === document.scrollingElement ? window : _eventContainer;
 
@@ -144,7 +135,6 @@ class OnlyScroll {
     /**
      * @description Обновление направления скрола. Также устанавливает на scrollContainer атрибут data-scroll-direction со значениями "up" | "down"
      * @description Вызывается автоматически на скрол, но можно вызывать вручную на случай непредвиденных ошибок
-     * @todo Сделать приватным методом, когда всё точно будет норм работать
      */
     public updateDirection = () => {
         this.lastPosition = this.scrollY;
@@ -189,6 +179,7 @@ class OnlyScroll {
     public lock = () => {
         this.scrollContainer.classList.add(this.classNames.lock);
         this.isLocked = true
+        this.sync();
     }
 
     /**
@@ -227,7 +218,7 @@ class OnlyScroll {
         this.scrollContainer.classList.remove(...Object.values(this.classNames));
         this.scrollContainer.removeAttribute('data-scroll-direction');
 
-        window.removeEventListener("keyup", this.onKeyUp);
+        window.removeEventListener("keydown", this.onKeyDown);
         this.eventContainer.removeEventListener("scroll", this.onScroll);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
         Array.from(this.listeners.values()).forEach((listener) => this.removeScrollListener(listener));
@@ -250,11 +241,7 @@ class OnlyScroll {
     }
 
     private initEvents = () => {
-        if (this.eventContainer === window && "scrollRestoration" in history) {
-            history.scrollRestoration = "manual";
-        }
-
-        window.addEventListener("keyup", this.onKeyUp, { passive: true });
+        window.addEventListener("keydown", this.onKeyDown, { passive: true });
         this.eventContainer.addEventListener("scroll", this.onScroll, { passive: true });
         this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
     }
@@ -286,10 +273,10 @@ class OnlyScroll {
         }
     }
 
-    private onKeyUp = (e: KeyboardEvent) => {
-        if (this.isLocked || ~this.navKeys.indexOf(e.key)) return;
+    private onKeyDown = (e: KeyboardEvent) => {
+        if (this.isLocked || !~this.navKeys.indexOf(e.key)) return;
 
-        this.checkSyncTo();
+        this.syncPos();
     }
 
     private onWheel = (e: Event) => {
@@ -346,8 +333,6 @@ class OnlyScroll {
     }
 
     private tick = () => {
-        if (this.isLocked) return;
-
         this.easedY = +((1 - this.damping) * this.easedY + this.damping * this.targetY).toFixed(2);
         this.scrollContainer.scrollTop = Math.round(this.easedY);
 
@@ -358,9 +343,6 @@ class OnlyScroll {
         this.lastY = this.easedY;
         this.velocity = parseInt((this.targetY - this.easedY).toString());
         this.progress = Math.round(this.easedY / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
-        if (this.rafID) {
-            cancelAnimationFrame(this.rafID);
-        }
         this.rafID = requestAnimationFrame(this.tick);
     }
 }
