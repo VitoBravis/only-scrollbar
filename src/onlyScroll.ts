@@ -43,7 +43,7 @@ const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Page
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.2.5
+ * @version 0.2.6
  */
 class OnlyScroll {
     /**
@@ -234,6 +234,7 @@ class OnlyScroll {
 
     private init = () => {
         (<HTMLElement>this.scrollContainer).style.overflow = 'auto';
+        (<HTMLElement>this.scrollContainer).style.scrollBehavior = 'auto';
         this.scrollContainer.classList.add(this.classNames.container);
 
         this.initEvents();
@@ -265,12 +266,11 @@ class OnlyScroll {
 
         if (window.location.hash !== this.lastHash) {
             this.lastHash = window.location.hash;
-            return void this.syncPos();
+            this.syncPos();
+            return;
         }
 
-        if (Math.abs(this.scrollY - this.easedY) > window.innerHeight * 0.5) {
-            this.checkSyncTo();
-        }
+        this.checkSyncTo();
     }
 
     private onKeyDown = (e: KeyboardEvent) => {
@@ -303,7 +303,7 @@ class OnlyScroll {
 
     private checkSyncTo = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(this.syncPos, 200);
+        this.syncTo = setTimeout(this.syncPos, 100);
     }
 
     private wheelCalculate = (wheelEvent: WheelEvent) => {
@@ -337,7 +337,8 @@ class OnlyScroll {
         this.scrollContainer.scrollTop = Math.round(this.easedY);
 
         if (this.lastY === this.easedY) {
-            return this.rafID = null;
+            this.rafID = null;
+            return;
         }
 
         this.lastY = this.easedY;
