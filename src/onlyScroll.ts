@@ -43,7 +43,7 @@ const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Page
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.2.6
+ * @version 0.2.7
  */
 class OnlyScroll {
     /**
@@ -243,7 +243,7 @@ class OnlyScroll {
 
     private initEvents = () => {
         window.addEventListener("keydown", this.onKeyDown, { passive: true });
-        this.eventContainer.addEventListener("scroll", this.onScroll, { passive: true });
+        this.scrollContainer.addEventListener("scroll", this.onScroll, { passive: true });
         this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
     }
 
@@ -303,7 +303,7 @@ class OnlyScroll {
 
     private checkSyncTo = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(this.syncPos, 100);
+        this.syncTo = setTimeout(this.syncPos, 200);
     }
 
     private wheelCalculate = (wheelEvent: WheelEvent) => {
