@@ -43,7 +43,7 @@ const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Page
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.2.7
+ * @version 0.3.0
  */
 class OnlyScroll {
     /**
@@ -88,6 +88,7 @@ class OnlyScroll {
     private lastDirection: Direction | null;
     private lastHash: string;
     private listeners: Set<EventHandler>;
+    private isDisable: boolean;
 
     constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollOptions) {
         const _scrollContainer =  this.findElementBySelector(element);
@@ -113,6 +114,7 @@ class OnlyScroll {
         this.navKeys = defaultNavKeys;
         this.lastHash = window.location.hash;
         this.listeners = new Set();
+        this.isDisable = true;
 
         this.init();
     }
@@ -177,7 +179,11 @@ class OnlyScroll {
      * @description Блокировка также прервет запущенные процессы по перерасчету позиции
      */
     public lock = () => {
+        if (this.isLocked) return;
         this.scrollContainer.classList.add(this.classNames.lock);
+        this.scrollContainer.style.overflow = 'hidden';
+        window.removeEventListener("keydown", this.onKeyDown);
+        this.eventContainer.removeEventListener("wheel", this.onWheel);
         this.isLocked = true
         this.sync();
     }
@@ -186,7 +192,11 @@ class OnlyScroll {
      * @description Разблокирует скрол, запускает перерасчет позиции скрола
      */
     public unlock = () => {
+        if (!this.isLocked) return;
         this.scrollContainer.classList.remove(this.classNames.lock);
+        this.scrollContainer.style.overflow = 'auto';
+        window.addEventListener("keydown", this.onKeyDown);
+        this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
         this.isLocked = false;
         this.tick();
     }
@@ -233,8 +243,8 @@ class OnlyScroll {
     }
 
     private init = () => {
-        (<HTMLElement>this.scrollContainer).style.overflow = 'auto';
-        (<HTMLElement>this.scrollContainer).style.scrollBehavior = 'auto';
+        this.scrollContainer.style.overflow = 'auto';
+        this.scrollContainer.style.scrollBehavior = 'auto';
         this.scrollContainer.classList.add(this.classNames.container);
 
         this.initEvents();
@@ -248,19 +258,17 @@ class OnlyScroll {
     }
 
     private findInitialAnchor = () => {
-        if (window.location.hash) {
-            const anchor = document.querySelector<HTMLElement>(window.location.hash);
+        if (!window.location.hash) return;
 
-            if (anchor) {
-                requestAnimationFrame(() => this.setValue(anchor.offsetTop))
-            }
-        } else {
-            this.setValue(0);
+        const anchor = document.querySelector<HTMLElement>(window.location.hash);
+
+        if (anchor) {
+            requestAnimationFrame(() => this.setValue(anchor.offsetTop))
         }
     }
 
     private onScroll = () => {
-        if (this.isLocked) return;
+        if (this.isLocked || this.isDisable) return;
 
         this.updateDirection();
 
@@ -274,7 +282,7 @@ class OnlyScroll {
     }
 
     private onKeyDown = (e: KeyboardEvent) => {
-        if (this.isLocked || !~this.navKeys.indexOf(e.key)) return;
+        if (this.isLocked || this.isDisable || !~this.navKeys.indexOf(e.key)) return;
 
         this.syncPos();
     }
@@ -282,9 +290,11 @@ class OnlyScroll {
     private onWheel = (e: Event) => {
         e.preventDefault();
 
+        if (this.isLocked) return;
+
         this.manageParentScrollbars(<HTMLElement>e.target);
 
-        if (this.isLocked) return;
+        if (this.isDisable) return;
 
         this.targetY += this.wheelCalculate(<WheelEvent>e).pixelY;
         this.targetY = Math.min(this.targetY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight);
@@ -303,7 +313,7 @@ class OnlyScroll {
 
     private checkSyncTo = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(this.syncPos, 200);
+        this.syncTo = setTimeout(this.syncPos, 100);
     }
 
     private wheelCalculate = (wheelEvent: WheelEvent) => {
@@ -325,11 +335,21 @@ class OnlyScroll {
     }
 
     private manageParentScrollbars = (currentTarget: HTMLElement) => {
-        if (currentTarget.closest(`.${this.classNames.container}`) !== this.scrollContainer) {
-            !this.isLocked && this.lock();
+        if (currentTarget.closest(`.${this.classNames.container}`)?.isSameNode(this.scrollContainer)) {
+            this.isDisable && this.enable();
         } else  {
-            this.isLocked && this.unlock();
+            !this.isDisable && this.disable();
         }
+    }
+
+    private disable = () => {
+        this.isDisable = true;
+        this.sync();
+    }
+
+    private enable = () => {
+        this.isDisable = false;
+        this.sync();
     }
 
     private tick = () => {
