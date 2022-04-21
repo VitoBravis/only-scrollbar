@@ -313,7 +313,7 @@ class OnlyScroll {
 
     private checkSyncTo = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(this.syncPos, 100);
+        this.syncTo = setTimeout(this.syncPos, 20);
     }
 
     private wheelCalculate = (wheelEvent: WheelEvent) => {
