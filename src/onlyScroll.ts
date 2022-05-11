@@ -43,7 +43,7 @@ const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Page
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.3.0
+ * @version 0.3.1
  */
 class OnlyScroll {
     /**
@@ -229,7 +229,8 @@ class OnlyScroll {
         this.scrollContainer.removeAttribute('data-scroll-direction');
 
         window.removeEventListener("keydown", this.onKeyDown);
-        this.eventContainer.removeEventListener("scroll", this.onScroll);
+        const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
+        scrollingElement.removeEventListener("scroll", this.onScroll);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
         Array.from(this.listeners.values()).forEach((listener) => this.removeScrollListener(listener));
     }
@@ -253,7 +254,8 @@ class OnlyScroll {
 
     private initEvents = () => {
         window.addEventListener("keydown", this.onKeyDown, { passive: true });
-        this.scrollContainer.addEventListener("scroll", this.onScroll, { passive: true });
+        const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
+        scrollingElement.addEventListener("scroll", this.onScroll, { passive: true });
         this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
     }
 
