@@ -35,15 +35,10 @@ const defaultOptions = {
 }
 
 /**
- * @description Список клавиш, нажатие которых должно вызывать событие по синхронизации позиции скрола
- */
-const defaultNavKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'PageDown', 'PageUp', 'Home', 'End', ' '];
-
-/**
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.3.1
+ * @version 0.3.2
  */
 class OnlyScroll {
     /**
@@ -77,7 +72,6 @@ class OnlyScroll {
     public isLocked: boolean;
 
     private readonly damping: number;
-    private readonly navKeys: string[];
     private syncTo: NodeJS.Timeout | undefined;
     private rafID: number | null;
     private easedY: number;
@@ -111,7 +105,6 @@ class OnlyScroll {
         this.isLocked = false;
         this.rafID = null
         this.damping = (options?.damping ?? defaultOptions.damping) * 0.1;
-        this.navKeys = defaultNavKeys;
         this.lastHash = window.location.hash;
         this.listeners = new Set();
         this.isDisable = true;
@@ -182,7 +175,6 @@ class OnlyScroll {
         if (this.isLocked) return;
         this.scrollContainer.classList.add(this.classNames.lock);
         this.scrollContainer.style.overflow = 'hidden';
-        window.removeEventListener("keydown", this.onKeyDown);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
         this.isLocked = true
         this.sync();
@@ -195,7 +187,6 @@ class OnlyScroll {
         if (!this.isLocked) return;
         this.scrollContainer.classList.remove(this.classNames.lock);
         this.scrollContainer.style.overflow = 'auto';
-        window.addEventListener("keydown", this.onKeyDown);
         this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
         this.isLocked = false;
         this.tick();
@@ -228,7 +219,6 @@ class OnlyScroll {
         this.scrollContainer.classList.remove(...Object.values(this.classNames));
         this.scrollContainer.removeAttribute('data-scroll-direction');
 
-        window.removeEventListener("keydown", this.onKeyDown);
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.removeEventListener("scroll", this.onScroll);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
@@ -253,7 +243,6 @@ class OnlyScroll {
     }
 
     private initEvents = () => {
-        window.addEventListener("keydown", this.onKeyDown, { passive: true });
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.addEventListener("scroll", this.onScroll, { passive: true });
         this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
@@ -283,12 +272,6 @@ class OnlyScroll {
         this.checkSyncTo();
     }
 
-    private onKeyDown = (e: KeyboardEvent) => {
-        if (this.isLocked || this.isDisable || !~this.navKeys.indexOf(e.key)) return;
-
-        this.syncPos();
-    }
-
     private onWheel = (e: Event) => {
         e.preventDefault();
 
@@ -315,7 +298,7 @@ class OnlyScroll {
 
     private checkSyncTo = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(this.syncPos, 20);
+        this.syncTo = setTimeout(this.sync, 100);
     }
 
     private wheelCalculate = (wheelEvent: WheelEvent) => {
