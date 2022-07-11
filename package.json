@@ -1,6 +1,6 @@
 {
   "name": "only-scrollbar",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "smooth-scroll",
   "main": "dist/onlyScroll.js",
   "types": "dist/onlyScroll.d.ts",
