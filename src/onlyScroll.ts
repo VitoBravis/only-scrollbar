@@ -1,7 +1,7 @@
 type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
 type Easing = 'default';
 type ClassNamesKeys = 'container' | 'lock';
-type ClassNames = { [key in ClassNamesKeys]: string };
+type ClassNames = Record<ClassNamesKeys, string>;
 /**
  * @description Направление скрола
  * @description 1 = Up, -1 = Down
@@ -50,7 +50,7 @@ const defaultOptions = {
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.3.4
+ * @version 0.3.5
  */
 class OnlyScroll {
     /**
@@ -267,6 +267,7 @@ class OnlyScroll {
     private init = () => {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
+        this.scrollContainer.dataset.scrollDirection = 'up'
         this.scrollContainer.classList.add(this.classNames.container);
 
         this.initEvents();
