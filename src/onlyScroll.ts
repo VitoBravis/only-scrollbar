@@ -50,7 +50,7 @@ const defaultOptions = {
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.3.5
+ * @version 0.3.6
  */
 class OnlyScroll {
     /**
@@ -123,7 +123,7 @@ class OnlyScroll {
         this.damping = (options?.damping ?? defaultOptions.damping) * 0.1;
         this.lastHash = window.location.hash;
         this.listeners = new Set();
-        this.isDisable = true;
+        this.isDisable = false;
 
         this.initialClientY = -1;
         this.documentListenerAdded = false;
