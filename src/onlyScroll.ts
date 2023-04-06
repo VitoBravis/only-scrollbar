@@ -12,6 +12,8 @@ export type Direction = -1 | 1
  */
 export type EventHandler = (e: Event) => void;
 
+export type OnlyScrollEvents = 'scrollEnd' | 'changeDirection'
+
 export interface OnlyScrollOptions {
     /**
      * @description Сила инерции в формате числа от 0 до 1
@@ -38,6 +40,9 @@ const preventDefault: EventListener = (event: Event) => {
     if (event.preventDefault) event.preventDefault();
 }
 
+const SCROLL_END_EVENT = new CustomEvent('scrollEnd');
+const CHANGE_DIRECTION_EVENT = new CustomEvent('changeDirection');
+
 /**
  * @description Набор настроек скрола по умолчанию
  */
@@ -56,7 +61,7 @@ class OnlyScroll {
     /**
      * @description Объект со всеми css-классами, которые используются в скроле
      */
-    public readonly classNames: ClassNames = {
+    static readonly classNames: ClassNames = {
         container: 'only-scroll-container',
         lock: 'only-scroll--is-locked',
     };
@@ -128,7 +133,7 @@ class OnlyScroll {
         this.initialClientY = -1;
         this.documentListenerAdded = false;
 
-        this.init();
+        requestAnimationFrame(this.init);
     }
 
     /**
@@ -156,6 +161,7 @@ class OnlyScroll {
         if (this.direction !== this.lastDirection) {
             this.scrollContainer.dataset.scrollDirection = this.direction === 1 ? "down" : "up";
             this.lastDirection = this.direction;
+            this.eventContainer.dispatchEvent(CHANGE_DIRECTION_EVENT);
         }
     }
 
@@ -173,6 +179,8 @@ class OnlyScroll {
      * @param positionY {number} - Числовое значение целевой позиции скрола
      */
     public scrollTo = (positionY: number) => {
+        if (positionY === this.y) return;
+
         this.targetY = positionY;
         this.tick();
     }
@@ -199,8 +207,8 @@ class OnlyScroll {
             this.scrollContainer.style.overflow = 'hidden';
         }
 
-        this.scrollContainer.classList.add(this.classNames.lock);
-        this.eventContainer.removeEventListener("wheel", this.onWheel);
+        this.scrollContainer.classList.add(OnlyScroll.classNames.lock);
+        this.removeEventListener("wheel", this.onWheel);
         this.isLocked = true
         this.sync();
     }
@@ -217,8 +225,8 @@ class OnlyScroll {
             this.scrollContainer.style.overflow = 'auto';
         }
 
-        this.scrollContainer.classList.remove(this.classNames.lock);
-        this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
+        this.scrollContainer.classList.remove(OnlyScroll.classNames.lock);
+        this.addEventListener("wheel", this.onWheel, { passive: false });
         this.isLocked = false;
         this.tick();
     }
@@ -230,6 +238,14 @@ class OnlyScroll {
     public addScrollListener = (eventHandler: EventHandler) => {
         this.eventContainer.addEventListener('scroll', eventHandler)
         this.listeners.add(eventHandler)
+    }
+
+    public addEventListener = (type: OnlyScrollEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions) => {
+        this.eventContainer.addEventListener(type, listener, options)
+    }
+
+    public removeEventListener = (type: OnlyScrollEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject) => {
+        this.eventContainer.removeEventListener(type, listener)
     }
 
     /**
@@ -247,7 +263,7 @@ class OnlyScroll {
     public destroy = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
         (<HTMLElement>this.scrollContainer).style.removeProperty('overflow');
-        this.scrollContainer.classList.remove(...Object.values(this.classNames));
+        this.scrollContainer.classList.remove(...Object.values(OnlyScroll.classNames));
         this.scrollContainer.removeAttribute('data-scroll-direction');
 
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
@@ -268,7 +284,7 @@ class OnlyScroll {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
         this.scrollContainer.dataset.scrollDirection = 'up'
-        this.scrollContainer.classList.add(this.classNames.container);
+        this.scrollContainer.classList.add(OnlyScroll.classNames.container);
 
         this.initEvents();
         this.findInitialAnchor();
@@ -277,7 +293,7 @@ class OnlyScroll {
     private initEvents = () => {
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.addEventListener("scroll", this.onScroll, { passive: true });
-        this.eventContainer.addEventListener("wheel", this.onWheel, { passive: false });
+        this.addEventListener("wheel", this.onWheel, { passive: false });
     }
 
     private findInitialAnchor = () => {
@@ -314,8 +330,7 @@ class OnlyScroll {
         if (this.isDisable) return;
 
         this.targetY += this.wheelCalculate(<WheelEvent>e).pixelY;
-        this.targetY = Math.min(this.targetY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight);
-        this.targetY = Math.max(this.targetY, 0);
+        this.targetY = Math.max(Math.min(this.targetY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0);
 
         if (this.rafID === null) {
             this.tick();
@@ -353,7 +368,7 @@ class OnlyScroll {
     }
 
     private manageParentScrollbars = (currentTarget: HTMLElement) => {
-        if (currentTarget.closest(`.${this.classNames.container}`)?.isSameNode(this.scrollContainer)) {
+        if (currentTarget.closest(`.${OnlyScroll.classNames.container}`)?.isSameNode(this.scrollContainer)) {
             this.isDisable && this.enable();
         } else  {
             !this.isDisable && this.disable();
@@ -453,12 +468,13 @@ class OnlyScroll {
 
         if (this.lastY === this.easedY) {
             this.rafID = null;
+            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
             return;
         }
 
         this.lastY = this.easedY;
-        this.velocity = parseInt((this.targetY - this.easedY).toString());
-        this.progress = Math.round(this.easedY / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
+        this.velocity = Math.round(this.targetY - this.easedY);
+        this.progress = Math.round(this.easedY / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100);
         this.rafID = requestAnimationFrame(this.tick);
     }
 }
