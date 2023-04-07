@@ -6,13 +6,13 @@ type ClassNames = Record<ClassNamesKeys, string>;
  * @description Направление скрола
  * @description 1 = Up, -1 = Down
  */
-export type Direction = Record<keyof Delta2D, -1 | 1>
+export type Direction = -1 | 1
 /**
  * @description Функция-обработчик для события скрола
  */
 export type EventHandler = (e: Event) => void;
 
-export type OnlyScrollEvents = 'scrollEnd' | 'changeDirectionY' | 'changeDirectionX'
+export type OnlyScrollEvents = 'scrollEnd' | 'changeDirection'
 
 export interface OnlyScrollOptions {
     /**
@@ -26,16 +26,6 @@ export interface OnlyScrollOptions {
      */
     eventContainer?: ElementOrSelector | Window;
     easing?: Easing;
-
-    /**
-     * @description Доступные направления скрола
-     */
-    mode?: 'vertical' | 'horizontal' | 'free'
-}
-
-export interface Delta2D {
-    x: number;
-    y: number;
 }
 
 const isIosDevice =
@@ -56,10 +46,9 @@ const CHANGE_DIRECTION_EVENT = new CustomEvent('changeDirection');
 /**
  * @description Набор настроек скрола по умолчанию
  */
-const defaultOptions: Required<Omit<OnlyScrollOptions, 'eventContainer'>> = {
+const defaultOptions = {
     damping: 1,
     easing: "default",
-    mode: "vertical"
 }
 
 /**
@@ -99,14 +88,6 @@ class OnlyScroll {
      */
     public isLocked: boolean;
 
-    public position: Delta2D;
-
-    private targetPosition: Delta2D;
-    private easedPosition: Delta2D;
-    private lastPosition: Delta2D;
-
-    public readonly mode: OnlyScrollOptions["mode"];
-
     private readonly damping: number;
     private syncTo: NodeJS.Timeout | undefined;
     private rafID: number | null;
@@ -114,7 +95,7 @@ class OnlyScroll {
     private lastY: number;
     private targetY: number;
     private scrollY: number;
-    private lastPositionY: number;
+    private lastPosition: number;
     private lastDirection: Direction | null;
     private lastHash: string;
     private listeners: Set<EventHandler>;
@@ -134,23 +115,17 @@ class OnlyScroll {
         const _eventContainer = this.findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
         this.eventContainer = _eventContainer === document.scrollingElement ? window : _eventContainer;
 
-        this.position = { x: 0, y: 0 }
-        this.targetPosition = { x: 0, y: 0 }
-        this.easedPosition = { x: 0, y: 0 }
-        this.lastPosition = { x: 0, y: 0 }
-
         this.scrollY = 0;
         this.easedY = 0;
         this.targetY = 0;
         this.lastY = 0;
         this.velocity = 0;
         this.progress = 0;
-        this.lastPositionY = 0;
+        this.lastPosition = 0;
         this.lastDirection = null;
         this.isLocked = false;
         this.rafID = null
         this.damping = (options?.damping ?? defaultOptions.damping) * 0.1;
-        this.mode = options?.mode ?? defaultOptions.mode;
         this.lastHash = window.location.hash;
         this.listeners = new Set();
         this.isDisable = false;
@@ -158,23 +133,19 @@ class OnlyScroll {
         this.initialClientY = -1;
         this.documentListenerAdded = false;
 
-        this.init();
+        requestAnimationFrame(this.init);
     }
 
     /**
      * @description Последнее направление скрола в числовом представлении
-     * @description 1 = Down|Right, -1 = Up|Left
+     * @description 1 = Up, -1 = Down
      */
     public get direction(): Direction {
-        return {
-            y: this.position.y >= this.lastPosition.y ? -1 : 1,
-            x: this.position.x > this.lastPosition.x ? -1 : 1
-        }
+        return this.scrollY > this.lastPosition ? 1 : -1
     }
 
     /**
      * @description Текущее значение позиции скрола
-     * @deprecated
      */
     public get y(): number {
         return this.scrollY;
@@ -185,20 +156,13 @@ class OnlyScroll {
      * @description Вызывается автоматически на скрол, но можно вызывать вручную на случай непредвиденных ошибок
      */
     public updateDirection = () => {
-        this.lastPosition = this.position
-        this.position = {
-            x: Math.abs(this.scrollContainer.scrollLeft),
-            y: Math.abs(this.scrollContainer.scrollTop)
-        }
-        const {x, y} = this.direction;
-        if (x !== this.lastDirection?.x) {
-            this.scrollContainer.dataset.scrollDirectionX = x === 1 ? "left" : "right";
+        this.lastPosition = this.scrollY;
+        this.scrollY = Math.abs(this.scrollContainer.scrollTop);
+        if (this.direction !== this.lastDirection) {
+            this.scrollContainer.dataset.scrollDirection = this.direction === 1 ? "down" : "up";
+            this.lastDirection = this.direction;
             this.eventContainer.dispatchEvent(CHANGE_DIRECTION_EVENT);
         }
-        if (y !== this.lastDirection?.y) {
-            this.scrollContainer.dataset.scrollDirectionY = y === 1 ? "up" : "down";
-        }
-        this.lastDirection = {x, y};
     }
 
     /**
@@ -214,15 +178,11 @@ class OnlyScroll {
      * @description Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений
      * @param positionY {number} - Числовое значение целевой позиции скрола
      */
-    public scrollTo = ({ x, y }: Partial<Delta2D>) => {
-        if (y === this.position.y && x === this.position.x) return;
+    public scrollTo = (positionY: number) => {
+        if (positionY === this.y) return;
 
-        this.sync();
-        this.targetPosition = {
-            x: x ?? this.position.x,
-            y: y ?? this.position.y
-        }
-        this.rafID = requestAnimationFrame(this.tick);
+        this.targetY = positionY;
+        this.tick();
     }
 
     /**
@@ -268,9 +228,7 @@ class OnlyScroll {
         this.scrollContainer.classList.remove(OnlyScroll.classNames.lock);
         this.addEventListener("wheel", this.onWheel, { passive: false });
         this.isLocked = false;
-        if (this.rafID === null) {
-            this.rafID = requestAnimationFrame(this.tick);
-        }
+        this.tick();
     }
 
     /**
@@ -325,8 +283,7 @@ class OnlyScroll {
     private init = () => {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
-        this.scrollContainer.dataset.scrollDirectionY = 'up'
-        this.scrollContainer.dataset.scrollDirectionX = 'left'
+        this.scrollContainer.dataset.scrollDirection = 'up'
         this.scrollContainer.classList.add(OnlyScroll.classNames.container);
 
         this.initEvents();
@@ -364,8 +321,6 @@ class OnlyScroll {
     }
 
     private onWheel = (e: Event) => {
-        if ((<WheelEvent>e).ctrlKey) return;
-
         e.preventDefault();
 
         if (this.isLocked) return;
@@ -374,26 +329,19 @@ class OnlyScroll {
 
         if (this.isDisable) return;
 
-        const { pixelX, pixelY } = this.wheelCalculate(<WheelEvent>e);
-        this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
-            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
-        }
-
         this.targetY += this.wheelCalculate(<WheelEvent>e).pixelY;
         this.targetY = Math.max(Math.min(this.targetY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0);
 
         if (this.rafID === null) {
-            this.rafID = requestAnimationFrame(this.tick);
+            this.tick();
         }
     }
 
     private syncPos = () => {
-        const currentPosition = { y: this.scrollContainer.scrollTop, x: this.scrollContainer.scrollLeft }
-        this.easedPosition = currentPosition;
-        this.targetPosition = currentPosition;
-        this.lastPosition = currentPosition;
-        this.position = currentPosition;
+        this.easedY = this.scrollContainer.scrollTop;
+        this.targetY = this.scrollContainer.scrollTop;
+        this.lastY = this.scrollContainer.scrollTop;
+        this.scrollY = this.scrollContainer.scrollTop;
     }
 
     private checkSyncTo = () => {
@@ -412,6 +360,8 @@ class OnlyScroll {
         }
 
         return {
+            spinX: deltaX < 1 ? -1 : 1,
+            spinY: deltaY < 1 ? -1 : 1,
             pixelX: deltaX,
             pixelY: deltaY
         }
@@ -513,23 +463,14 @@ class OnlyScroll {
     }
 
     private tick = () => {
-        this.easedPosition = {
-            x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
-            y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
-        }
-        this.scrollContainer.scrollTop = Math.round(this.easedPosition.y);
-        this.scrollContainer.scrollLeft = Math.round(this.easedPosition.x);
-
         this.easedY = +((1 - this.damping) * this.easedY + this.damping * this.targetY).toFixed(2);
-        // this.scrollContainer.scrollTop = Math.round(this.easedY);
+        this.scrollContainer.scrollTop = Math.round(this.easedY);
 
-        if (this.lastPosition.y === this.easedPosition.y && this.lastPosition.x === this.easedPosition.x) {
+        if (this.lastY === this.easedY) {
             this.rafID = null;
             this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
             return;
         }
-
-        this.lastPosition = this.easedPosition;
 
         this.lastY = this.easedY;
         this.velocity = Math.round(this.targetY - this.easedY);
