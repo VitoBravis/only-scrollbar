@@ -50,7 +50,7 @@ const defaultOptions = {
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.3.7
+ * @version 0.4.0
  */
 class OnlyScroll {
     /**
@@ -136,7 +136,14 @@ class OnlyScroll {
      * @description 1 = Up, -1 = Down
      */
     public get direction(): Direction {
-        return this.scrollY > this.lastPosition ? 1 : -1
+        switch(true) {
+            case this.scrollY > this.lastPosition:
+                return 1;
+            case this.scrollY < this.lastPosition:
+                return -1;
+            default:
+                return this.lastDirection ?? 1
+        }
     }
 
     /**
@@ -156,6 +163,8 @@ class OnlyScroll {
         if (this.direction !== this.lastDirection) {
             this.scrollContainer.dataset.scrollDirection = this.direction === 1 ? "down" : "up";
             this.lastDirection = this.direction;
+            const changeDirectionEvent = new CustomEvent('changeDirection');
+            this.eventContainer.dispatchEvent(changeDirectionEvent);
         }
     }
 
@@ -305,6 +314,8 @@ class OnlyScroll {
     }
 
     private onWheel = (e: Event) => {
+        if ((<WheelEvent>e).ctrlKey) return;
+
         e.preventDefault();
 
         if (this.isLocked) return;
@@ -453,6 +464,8 @@ class OnlyScroll {
 
         if (this.lastY === this.easedY) {
             this.rafID = null;
+            const scrollEndEvent = new CustomEvent('scrollEnd');
+            this.eventContainer.dispatchEvent(scrollEndEvent);
             return;
         }
 

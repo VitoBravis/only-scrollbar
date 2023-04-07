@@ -78,6 +78,8 @@ scroll.destroy();
     - [OnlyScroll.addScrollListener](#onlyscrolladdScrollListener)
     - [OnlyScroll.removeScrollListener](#onlyscrollremoveScrollListener)
     - [OnlyScroll.destroy](#onlyscrolldestroy)
+    
+- [События](#события)
 
 ### Свойства
 
@@ -259,3 +261,19 @@ scroll.destroy(): void
 ```
 
 Очистка событий, таймеров, классов и атрибутов
+
+### События
+
+Для работы с событиями необходимо обращаться к полю `eventContainer`
+
+Например:
+```ts
+const onlyScroll = new OnlyScroll(window);
+
+onlyScroll.eventContainer.addEventListener('scrollEnd', eventHandler);
+/* ... */
+onlyScroll.eventContainer.removeEventListener('scrollEnd', eventHandler);
+```
+
+- **scrollEnd** - Вызывается каждый раз после окончания анимации скрола
+- **changeDirection** - Вызывается каждый раз после смены направления скрола
