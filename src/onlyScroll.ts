@@ -290,8 +290,8 @@ class OnlyScroll {
     public updateDirection = () => {
         this.lastPosition = this.position
         this.position = {
-            x: Math.abs(this.scrollContainer.scrollLeft),
-            y: Math.abs(this.scrollContainer.scrollTop)
+            x: this.scrollContainer.scrollLeft,
+            y: this.scrollContainer.scrollTop
         }
         const {x, y} = this.direction;
         if (x !== this.lastDirection?.x) {
@@ -333,8 +333,9 @@ class OnlyScroll {
      * @description Установка конкретного значения скрол позиции, без применения каких-либо анимаций
      * @param value {number} - Числовое значение целевой позиции скрола
      */
-    public setValue = (value: number) => {
-        this.scrollContainer.scrollTop = value;
+    public setValue = ({ x, y }: Partial<Delta2D>) => {
+        this.scrollContainer.scrollTop = y ?? this.position.y;
+        this.scrollContainer.scrollLeft = x ?? this.position.x;
         this.sync()
     }
 
@@ -436,7 +437,7 @@ class OnlyScroll {
         const anchor = document.querySelector<HTMLElement>(window.location.hash);
 
         if (anchor) {
-            requestAnimationFrame(() => this.setValue(anchor.offsetTop))
+            this.setValue({ y: anchor.offsetTop })
         }
     }
 
