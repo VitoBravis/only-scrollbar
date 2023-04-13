@@ -51,9 +51,6 @@ const preventDefault: EventListener = (event: Event) => {
     if (event.preventDefault) event.preventDefault();
 }
 
-const SCROLL_END_EVENT = new CustomEvent('scrollEnd');
-const CHANGE_DIRECTION_EVENT = new CustomEvent('changeDirection');
-
 /**
  * @description Набор настроек скрола по умолчанию
  */
@@ -63,6 +60,15 @@ const defaultOptions: Required<Omit<OnlyScrollOptions, 'eventContainer'>> = {
     mode: "vertical"
 }
 
+const emit = (container: OnlyScroll["eventContainer"], eventName: OnlyScrollEvents) => {
+    const event = new CustomEvent(eventName);
+    container.dispatchEvent(event)
+}
+
+/**
+ * @todo Перенести в helpers
+ * @param wheelEvent
+ */
 function wheelCalculate(wheelEvent: WheelEvent) {
     let deltaY = wheelEvent.deltaY;
     let deltaX = wheelEvent.deltaX;
@@ -107,7 +113,6 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
 
         if (this.lastPosition.y === this.easedPosition.y) {
             this.rafID = null;
-            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
             return;
         }
 
@@ -131,7 +136,6 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
 
         if (this.lastPosition.x === this.easedPosition.x) {
             this.rafID = null;
-            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
             return;
         }
 
@@ -156,7 +160,6 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
 
         if (this.lastPosition.y === this.easedPosition.y && this.lastPosition.x === this.easedPosition.x) {
             this.rafID = null;
-            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
             return;
         }
 
@@ -248,7 +251,6 @@ class OnlyScroll {
         this.targetPosition = { x: 0, y: 0 }
         this.easedPosition = { x: 0, y: 0 }
         this.lastPosition = { x: 0, y: 0 }
-
         this.velocity = { x: 0, y: 0 };
         this.progress = { x: 0, y: 0 };
         this.lastDirection = null;
@@ -273,9 +275,11 @@ class OnlyScroll {
      * @description 1 = Down|Right, -1 = Up|Left
      */
     public get direction(): Direction {
+        const Y = Math.sign(this.position.y - this.lastPosition.y);
+        const X = Math.sign(this.position.x - this.lastPosition.x);
         return {
-            y: this.position.y >= this.lastPosition.y ? -1 : 1,
-            x: this.position.x > this.lastPosition.x ? -1 : 1
+            y: Y !== 0 ? <-1 | 1>Y : this.lastDirection?.y ?? -1,
+            x: X !== 0 ? <-1 | 1>X : this.lastDirection?.x ?? -1
         }
     }
 
@@ -291,11 +295,12 @@ class OnlyScroll {
         }
         const {x, y} = this.direction;
         if (x !== this.lastDirection?.x) {
-            this.scrollContainer.dataset.scrollDirectionX = x === 1 ? "left" : "right";
-            this.eventContainer.dispatchEvent(CHANGE_DIRECTION_EVENT);
+            this.scrollContainer.dataset.scrollDirectionX = x !== 1 ? "left" : "right";
+            emit(this.eventContainer, "changeDirectionX")
         }
         if (y !== this.lastDirection?.y) {
-            this.scrollContainer.dataset.scrollDirectionY = y === 1 ? "up" : "down";
+            this.scrollContainer.dataset.scrollDirectionY = y !== 1 ? "up" : "down";
+            emit(this.eventContainer, "changeDirectionY")
         }
         this.lastDirection = {x, y};
     }
@@ -477,7 +482,10 @@ class OnlyScroll {
 
     private checkSyncTo = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(this.sync, 150);
+        this.syncTo = setTimeout(() => {
+            emit(this.eventContainer, "scrollEnd");
+            this.sync();
+        }, 200);
     }
 
     private manageParentScrollbars = (currentTarget: HTMLElement) => {
