@@ -14,6 +14,8 @@ export type EventHandler = (e: Event) => void;
 
 export type OnlyScrollEvents = 'scrollEnd' | 'changeDirectionY' | 'changeDirectionX'
 
+export type OnlyScrollModes = 'vertical' | 'horizontal' | 'free';
+
 export interface OnlyScrollOptions {
     /**
      * @description Сила инерции в формате числа от 0 до 1
@@ -26,11 +28,10 @@ export interface OnlyScrollOptions {
      */
     eventContainer?: ElementOrSelector | Window;
     easing?: Easing;
-
     /**
      * @description Доступные направления скрола
      */
-    mode?: 'vertical' | 'horizontal' | 'free'
+    mode?: OnlyScrollModes
 }
 
 export interface Delta2D {
@@ -62,8 +63,119 @@ const defaultOptions: Required<Omit<OnlyScrollOptions, 'eventContainer'>> = {
     mode: "vertical"
 }
 
+function wheelCalculate(wheelEvent: WheelEvent) {
+    let deltaY = wheelEvent.deltaY;
+    let deltaX = wheelEvent.deltaX;
+
+    if (wheelEvent.deltaMode) {
+        const deltaMultiply = wheelEvent.deltaMode == 1 ? 40 : 800;
+        deltaX *= deltaMultiply;
+        deltaY *= deltaMultiply;
+    }
+
+    return {
+        pixelX: deltaX,
+        pixelY: deltaY
+    }
+}
+
+const wheelFunctions: Record<OnlyScrollModes, EventListener> = {
+    vertical: function(this: OnlyScroll, e: Event) {
+        const { pixelY } = wheelCalculate(<WheelEvent>e);
+        this.targetPosition.y = Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0);
+    },
+    horizontal: function(this: OnlyScroll, e: Event) {
+        const { pixelX } = wheelCalculate(<WheelEvent>e);
+        this.targetPosition.x = Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0);
+    },
+    free: function(this: OnlyScroll, e: Event) {
+        const { pixelX, pixelY } = wheelCalculate(<WheelEvent>e);
+        this.targetPosition = {
+            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
+            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
+        };
+    }
+}
+
+const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
+    vertical: function(this: OnlyScroll) {
+        this.easedPosition = {
+            x: 0,
+            y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
+        }
+        this.scrollContainer.scrollTop = Math.round(this.easedPosition.y);
+
+        if (this.lastPosition.y === this.easedPosition.y) {
+            this.rafID = null;
+            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
+            return;
+        }
+
+        this.lastPosition = this.easedPosition;
+        this.velocity = {
+            x: 0,
+            y: Math.round(this.targetPosition.y - this.easedPosition.y)
+        };
+        this.progress = {
+            x: 0,
+            y: Math.round(this.easedPosition.y / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
+        }
+        this.rafID = requestAnimationFrame(this.tick);
+    },
+    horizontal: function(this: OnlyScroll) {
+        this.easedPosition = {
+            x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
+            y: 0
+        }
+        this.scrollContainer.scrollLeft = Math.round(this.easedPosition.x);
+
+        if (this.lastPosition.x === this.easedPosition.x) {
+            this.rafID = null;
+            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
+            return;
+        }
+
+        this.lastPosition = this.easedPosition;
+        this.velocity = {
+            x: Math.round(this.targetPosition.x - this.easedPosition.x),
+            y: 0
+        };
+        this.progress = {
+            x: Math.round(this.easedPosition.x / (this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth) * 100),
+            y: 0
+        }
+        this.rafID = requestAnimationFrame(this.tick);
+    },
+    free: function(this: OnlyScroll) {
+        this.easedPosition = {
+            x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
+            y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
+        }
+        this.scrollContainer.scrollTop = Math.round(this.easedPosition.y);
+        this.scrollContainer.scrollLeft = Math.round(this.easedPosition.x);
+
+        if (this.lastPosition.y === this.easedPosition.y && this.lastPosition.x === this.easedPosition.x) {
+            this.rafID = null;
+            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
+            return;
+        }
+
+        this.lastPosition = this.easedPosition;
+        this.velocity = {
+            x: Math.round(this.targetPosition.x - this.easedPosition.x),
+            y: Math.round(this.targetPosition.y - this.easedPosition.y)
+        };
+        this.progress = {
+            x: Math.round(this.easedPosition.x / (this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth) * 100),
+            y: Math.round(this.easedPosition.y / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
+        }
+        this.rafID = requestAnimationFrame(this.tick);
+    },
+}
+
+
 /**
- * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
+ * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
  * @version 1.0.0
@@ -89,11 +201,11 @@ class OnlyScroll {
     /**
      * @description Текущее ускорение скрола. Во внутренних расчетах не используется
      */
-    public velocity: number;
+    public velocity: Delta2D;
     /**
      * @description Текущий прогресс скрола, в числовом представлении от 0 до 100
      */
-    public progress: number;
+    public progress: Delta2D;
     /**
      * @description Состояние, отображающее блокировку скрола
      */
@@ -101,28 +213,26 @@ class OnlyScroll {
 
     public position: Delta2D;
 
-    private targetPosition: Delta2D;
-    private easedPosition: Delta2D;
-    private lastPosition: Delta2D;
+    public targetPosition: Delta2D;
+    public easedPosition: Delta2D;
+    public lastPosition: Delta2D;
 
-    public readonly mode: OnlyScrollOptions["mode"];
+    public readonly mode: OnlyScrollModes;
 
-    private readonly damping: number;
+    public readonly damping: number;
     private syncTo: NodeJS.Timeout | undefined;
-    private rafID: number | null;
-    private easedY: number;
-    private lastY: number;
-    private targetY: number;
-    private scrollY: number;
-    private lastPositionY: number;
+    public rafID: number | null;
     private lastDirection: Direction | null;
     private lastHash: string;
-    private listeners: Set<EventHandler>;
+
     private isDisable: boolean;
 
     private previousBodyPosition: any;
     private initialClientY: number;
     private documentListenerAdded: boolean;
+
+    private readonly setTargetPosition: EventListener;
+    public readonly tick: FrameRequestCallback;
 
     constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollOptions) {
         const _scrollContainer =  this.findElementBySelector(element);
@@ -134,29 +244,26 @@ class OnlyScroll {
         const _eventContainer = this.findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
         this.eventContainer = _eventContainer === document.scrollingElement ? window : _eventContainer;
 
-        this.position = { x: 0, y: 0 }
+        this.position = { x: 0, y: 0 };
         this.targetPosition = { x: 0, y: 0 }
         this.easedPosition = { x: 0, y: 0 }
         this.lastPosition = { x: 0, y: 0 }
 
-        this.scrollY = 0;
-        this.easedY = 0;
-        this.targetY = 0;
-        this.lastY = 0;
-        this.velocity = 0;
-        this.progress = 0;
-        this.lastPositionY = 0;
+        this.velocity = { x: 0, y: 0 };
+        this.progress = { x: 0, y: 0 };
         this.lastDirection = null;
         this.isLocked = false;
         this.rafID = null
         this.damping = (options?.damping ?? defaultOptions.damping) * 0.1;
         this.mode = options?.mode ?? defaultOptions.mode;
         this.lastHash = window.location.hash;
-        this.listeners = new Set();
         this.isDisable = false;
 
         this.initialClientY = -1;
         this.documentListenerAdded = false;
+
+        this.setTargetPosition = wheelFunctions[this.mode].bind(this);
+        this.tick = tickByMode[this.mode].bind(this);
 
         this.init();
     }
@@ -170,14 +277,6 @@ class OnlyScroll {
             y: this.position.y >= this.lastPosition.y ? -1 : 1,
             x: this.position.x > this.lastPosition.x ? -1 : 1
         }
-    }
-
-    /**
-     * @description Текущее значение позиции скрола
-     * @deprecated
-     */
-    public get y(): number {
-        return this.scrollY;
     }
 
     /**
@@ -273,15 +372,6 @@ class OnlyScroll {
         }
     }
 
-    /**
-     * @description Добавляет обработчик события скрола на eventContainer
-     * @param eventHandler {function} - Стандартная функция обработчик события скрола
-     */
-    public addScrollListener = (eventHandler: EventHandler) => {
-        this.eventContainer.addEventListener('scroll', eventHandler)
-        this.listeners.add(eventHandler)
-    }
-
     public addEventListener = (type: OnlyScrollEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions) => {
         this.eventContainer.addEventListener(type, listener, options)
     }
@@ -291,29 +381,25 @@ class OnlyScroll {
     }
 
     /**
-     * @description Удаляет существующий обработчик события скрола на eventContainer
-     * @param eventHandler {function} - Стандартная функция обработчик события скрола
-     */
-    public removeScrollListener = (eventHandler: EventHandler) => {
-        this.eventContainer.removeEventListener('scroll', eventHandler)
-        this.listeners.delete(eventHandler);
-    }
-
-    /**
      * @description Очистка событий, таймеров, классов и атрибутов
      */
     public destroy = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
+        this.rafID = null;
         (<HTMLElement>this.scrollContainer).style.removeProperty('overflow');
         this.scrollContainer.classList.remove(...Object.values(OnlyScroll.classNames));
-        this.scrollContainer.removeAttribute('data-scroll-direction');
+        this.scrollContainer.removeAttribute('data-scroll-direction-x');
+        this.scrollContainer.removeAttribute('data-scroll-direction-y');
 
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.removeEventListener("scroll", this.onScroll);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
-        Array.from(this.listeners.values()).forEach((listener) => this.removeScrollListener(listener));
     }
 
+    /**
+     * @todo Перенести в helpers
+     * @param selector
+     */
     private findElementBySelector = (selector: ElementOrSelector | null | undefined) => {
         if (selector !== window && selector !== document.scrollingElement) {
             return typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : <HTMLElement>selector;
@@ -374,14 +460,7 @@ class OnlyScroll {
 
         if (this.isDisable) return;
 
-        const { pixelX, pixelY } = this.wheelCalculate(<WheelEvent>e);
-        this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
-            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
-        }
-
-        this.targetY += this.wheelCalculate(<WheelEvent>e).pixelY;
-        this.targetY = Math.max(Math.min(this.targetY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0);
+        this.setTargetPosition(e);
 
         if (this.rafID === null) {
             this.rafID = requestAnimationFrame(this.tick);
@@ -398,23 +477,7 @@ class OnlyScroll {
 
     private checkSyncTo = () => {
         if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(this.sync, 100);
-    }
-
-    private wheelCalculate = (wheelEvent: WheelEvent) => {
-        let deltaY = wheelEvent.deltaY;
-        let deltaX = wheelEvent.deltaX;
-
-        if (wheelEvent.deltaMode) {
-            const deltaMultiply = wheelEvent.deltaMode == 1 ? 40 : 800;
-            deltaX *= deltaMultiply;
-            deltaY *= deltaMultiply;
-        }
-
-        return {
-            pixelX: deltaX,
-            pixelY: deltaY
-        }
+        this.syncTo = setTimeout(this.sync, 150);
     }
 
     private manageParentScrollbars = (currentTarget: HTMLElement) => {
@@ -510,31 +573,6 @@ class OnlyScroll {
 
             this.previousBodyPosition = undefined;
         }
-    }
-
-    private tick = () => {
-        this.easedPosition = {
-            x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
-            y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
-        }
-        this.scrollContainer.scrollTop = Math.round(this.easedPosition.y);
-        this.scrollContainer.scrollLeft = Math.round(this.easedPosition.x);
-
-        this.easedY = +((1 - this.damping) * this.easedY + this.damping * this.targetY).toFixed(2);
-        // this.scrollContainer.scrollTop = Math.round(this.easedY);
-
-        if (this.lastPosition.y === this.easedPosition.y && this.lastPosition.x === this.easedPosition.x) {
-            this.rafID = null;
-            this.eventContainer.dispatchEvent(SCROLL_END_EVENT);
-            return;
-        }
-
-        this.lastPosition = this.easedPosition;
-
-        this.lastY = this.easedY;
-        this.velocity = Math.round(this.targetY - this.easedY);
-        this.progress = Math.round(this.easedY / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100);
-        this.rafID = requestAnimationFrame(this.tick);
     }
 }
 
