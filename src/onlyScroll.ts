@@ -1,5 +1,4 @@
 type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
-type Easing = 'default';
 type ClassNamesKeys = 'container' | 'lock';
 type ClassNames = Record<ClassNamesKeys, string>;
 /**
@@ -27,7 +26,6 @@ export interface OnlyScrollOptions {
      * @default scrollContainer
      */
     eventContainer?: ElementOrSelector | Window;
-    easing?: Easing;
     /**
      * @description Доступные направления скрола
      */
@@ -56,7 +54,6 @@ const preventDefault: EventListener = (event: Event) => {
  */
 const defaultOptions: Required<Omit<OnlyScrollOptions, 'eventContainer'>> = {
     damping: 1,
-    easing: "default",
     mode: "vertical"
 }
 
