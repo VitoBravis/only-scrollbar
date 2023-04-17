@@ -117,14 +117,6 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
         }
 
         this.lastPosition = this.easedPosition;
-        this.velocity = {
-            x: 0,
-            y: Math.round(this.targetPosition.y - this.easedPosition.y)
-        };
-        this.progress = {
-            x: 0,
-            y: Math.round(this.easedPosition.y / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
-        }
         this.rafID = requestAnimationFrame(this.tick);
     },
     horizontal: function(this: OnlyScroll) {
@@ -140,14 +132,6 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
         }
 
         this.lastPosition = this.easedPosition;
-        this.velocity = {
-            x: Math.round(this.targetPosition.x - this.easedPosition.x),
-            y: 0
-        };
-        this.progress = {
-            x: Math.round(this.easedPosition.x / (this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth) * 100),
-            y: 0
-        }
         this.rafID = requestAnimationFrame(this.tick);
     },
     free: function(this: OnlyScroll) {
@@ -164,14 +148,6 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
         }
 
         this.lastPosition = this.easedPosition;
-        this.velocity = {
-            x: Math.round(this.targetPosition.x - this.easedPosition.x),
-            y: Math.round(this.targetPosition.y - this.easedPosition.y)
-        };
-        this.progress = {
-            x: Math.round(this.easedPosition.x / (this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth) * 100),
-            y: Math.round(this.easedPosition.y / (this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight) * 100)
-        }
         this.rafID = requestAnimationFrame(this.tick);
     },
 }
@@ -201,14 +177,6 @@ class OnlyScroll {
      * @default OnlyScroll.scrollContainer
      */
     public readonly eventContainer: HTMLElement | Window;
-    /**
-     * @description Текущее ускорение скрола. Во внутренних расчетах не используется
-     */
-    public velocity: Delta2D;
-    /**
-     * @description Текущий прогресс скрола, в числовом представлении от 0 до 100
-     */
-    public progress: Delta2D;
     /**
      * @description Состояние, отображающее блокировку скрола
      */
@@ -251,8 +219,6 @@ class OnlyScroll {
         this.targetPosition = { x: 0, y: 0 }
         this.easedPosition = { x: 0, y: 0 }
         this.lastPosition = { x: 0, y: 0 }
-        this.velocity = { x: 0, y: 0 };
-        this.progress = { x: 0, y: 0 };
         this.lastDirection = null;
         this.isLocked = false;
         this.rafID = null
