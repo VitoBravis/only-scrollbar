@@ -250,7 +250,7 @@ class OnlyScroll {
      * @description Обновление направления скрола. Также устанавливает на scrollContainer атрибут data-scroll-direction со значениями "up" | "down"
      * @description Вызывается автоматически на скрол, но можно вызывать вручную на случай непредвиденных ошибок
      */
-    public updateDirection = () => {
+    public updateDirection() {
         this.lastPosition = this.position
         this.position = {
             x: this.scrollContainer.scrollLeft,
@@ -272,7 +272,7 @@ class OnlyScroll {
      * @description Синхронизация всех значений, которые используются для расчета позиций
      * @description Вызывается автоматически по окончанию событий скрола, но можно вызвать вручную для преждевременной синхронизации и обнуления анимации
      */
-    public sync = () => {
+    public sync() {
         this.syncPos();
         this.rafID = null
     }
@@ -281,7 +281,7 @@ class OnlyScroll {
      * @description Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений
      * @param positionY {number} - Числовое значение целевой позиции скрола
      */
-    public scrollTo = ({ x, y }: Partial<Delta2D>) => {
+    public scrollTo({ x, y }: Partial<Delta2D>) {
         if (y === this.position.y && x === this.position.x) return;
 
         this.sync();
@@ -296,7 +296,7 @@ class OnlyScroll {
      * @description Установка конкретного значения скрол позиции, без применения каких-либо анимаций
      * @param value {number} - Числовое значение целевой позиции скрола
      */
-    public setValue = ({ x, y }: Partial<Delta2D>) => {
+    public setValue({ x, y }: Partial<Delta2D>) {
         this.scrollContainer.scrollTop = y ?? this.position.y;
         this.scrollContainer.scrollLeft = x ?? this.position.x;
         this.sync()
@@ -306,7 +306,7 @@ class OnlyScroll {
      * @description Блокирует скрол
      * @description Блокировка также прервет запущенные процессы по перерасчету позиции
      */
-    public lock = () => {
+    public lock() {
         if (this.isLocked) return;
 
         if (isIosDevice) {
@@ -324,7 +324,7 @@ class OnlyScroll {
     /**
      * @description Разблокирует скрол, запускает перерасчет позиции скрола
      */
-    public unlock = () => {
+    public unlock() {
         if (!this.isLocked) return;
 
         if (isIosDevice) {
@@ -341,18 +341,18 @@ class OnlyScroll {
         }
     }
 
-    public addEventListener = (type: OnlyScrollEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions) => {
+    public addEventListener(type: OnlyScrollEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions) {
         this.eventContainer.addEventListener(type, listener, options)
     }
 
-    public removeEventListener = (type: OnlyScrollEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject) => {
+    public removeEventListener(type: OnlyScrollEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject) {
         this.eventContainer.removeEventListener(type, listener)
     }
 
     /**
      * @description Очистка событий, таймеров, классов и атрибутов
      */
-    public destroy = () => {
+    public destroy() {
         if (this.syncTo) clearTimeout(this.syncTo);
         this.rafID = null;
         (<HTMLElement>this.scrollContainer).style.removeProperty('overflow');
@@ -369,7 +369,7 @@ class OnlyScroll {
      * @todo Перенести в helpers
      * @param selector
      */
-    private findElementBySelector = (selector: ElementOrSelector | null | undefined) => {
+    private findElementBySelector(selector: ElementOrSelector | null | undefined) {
         if (selector !== window && selector !== document.scrollingElement) {
             return typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : <HTMLElement>selector;
         } else {
@@ -377,7 +377,7 @@ class OnlyScroll {
         }
     }
 
-    private init = () => {
+    private init() {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
         this.scrollContainer.dataset.scrollDirectionY = 'up'
@@ -385,23 +385,12 @@ class OnlyScroll {
         this.scrollContainer.classList.add(OnlyScroll.classNames.container);
 
         this.initEvents();
-        this.findInitialAnchor();
     }
 
-    private initEvents = () => {
+    private initEvents() {
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.addEventListener("scroll", this.onScroll, { passive: true });
         this.addEventListener("wheel", this.onWheel, { passive: false });
-    }
-
-    private findInitialAnchor = () => {
-        if (!window.location.hash) return;
-
-        const anchor = document.querySelector<HTMLElement>(window.location.hash);
-
-        if (anchor) {
-            this.setValue({ y: anchor.offsetTop })
-        }
     }
 
     private onScroll = () => {
@@ -436,7 +425,7 @@ class OnlyScroll {
         }
     }
 
-    private syncPos = () => {
+    private syncPos() {
         const currentPosition = { y: this.scrollContainer.scrollTop, x: this.scrollContainer.scrollLeft }
         this.easedPosition = currentPosition;
         this.targetPosition = currentPosition;
@@ -444,7 +433,7 @@ class OnlyScroll {
         this.position = currentPosition;
     }
 
-    private checkSyncTo = () => {
+    private checkSyncTo() {
         if (this.syncTo) clearTimeout(this.syncTo);
         this.syncTo = setTimeout(() => {
             emit(this.eventContainer, "scrollEnd");
@@ -452,7 +441,7 @@ class OnlyScroll {
         }, 200);
     }
 
-    private manageParentScrollbars = (currentTarget: HTMLElement) => {
+    private manageParentScrollbars(currentTarget: HTMLElement) {
         if (currentTarget.closest(`.${OnlyScroll.classNames.container}`)?.isSameNode(this.scrollContainer)) {
             this.isDisable && this.enable();
         } else  {
@@ -460,17 +449,17 @@ class OnlyScroll {
         }
     }
 
-    private disable = () => {
+    private disable() {
         this.isDisable = true;
         this.sync();
     }
 
-    private enable = () => {
+    private enable() {
         this.isDisable = false;
         this.sync();
     }
 
-    private disableIosScroll = () => {
+    private disableIosScroll() {
         requestAnimationFrame(() => {
             if (this.previousBodyPosition === undefined) {
                 this.previousBodyPosition = {
@@ -524,7 +513,7 @@ class OnlyScroll {
         }
     }
 
-    private enableIosScroll = () => {
+    private enableIosScroll() {
         this.scrollContainer.ontouchstart = null;
         this.scrollContainer.ontouchmove = null;
 
