@@ -1,6 +1,6 @@
 {
   "name": "only-scrollbar",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "smooth-scroll",
   "main": "dist/onlyScroll.js",
   "types": "dist/onlyScroll.d.ts",
@@ -24,9 +24,9 @@
     "dist/**/*"
   ],
   "bugs": {
-    "url": "https://gitlab.com/VitoBravis/only-scrollbar/-/issues"
+    "url": "https://github.com/VitoBravis/only-scroll/issues"
   },
-  "homepage": "https://gitlab.com/VitoBravis/only-scrollbar#onlyscroll",
+  "homepage": "https://github.com/VitoBravis/only-scroll#onlyscroll",
   "devDependencies": {
     "@types/node": "^17.0.21",
     "ts-loader": "^9.2.8",

@@ -2,6 +2,8 @@ type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
 type Easing = 'default';
 type ClassNamesKeys = 'container' | 'lock';
 type ClassNames = Record<ClassNamesKeys, string>;
+
+const IS_TOUCH =  'ontouchstart' in document;
 /**
  * @description Направление скрола
  * @description 1 = Up, -1 = Down
@@ -50,7 +52,7 @@ const defaultOptions = {
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.4.0
+ * @version 0.4.1
  */
 class OnlyScroll {
     /**
@@ -309,6 +311,8 @@ class OnlyScroll {
             this.syncPos();
             return;
         }
+
+        if (IS_TOUCH) return;
 
         this.checkSyncTo();
     }
