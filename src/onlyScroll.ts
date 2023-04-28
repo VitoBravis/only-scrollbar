@@ -2,8 +2,6 @@ type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
 type Easing = 'default';
 type ClassNamesKeys = 'container' | 'lock';
 type ClassNames = Record<ClassNamesKeys, string>;
-
-const IS_TOUCH =  'ontouchstart' in document;
 /**
  * @description Направление скрола
  * @description 1 = Up, -1 = Down
@@ -312,7 +310,7 @@ class OnlyScroll {
             return;
         }
 
-        if (IS_TOUCH) return;
+        if ('ontouchstart' in document) return;
 
         this.checkSyncTo();
     }

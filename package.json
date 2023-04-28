@@ -1,6 +1,6 @@
 {
   "name": "only-scrollbar",
-  "version": "0.4.1",
+  "version": "0.4.12",
   "description": "smooth-scroll",
   "main": "dist/onlyScroll.js",
   "types": "dist/onlyScroll.d.ts",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/VitoBravis/only-scrollbar"
+    "url": "git+https://github.com/VitoBravis/only-scroll"
   },
   "keywords": [
     "smooth-scroll",
