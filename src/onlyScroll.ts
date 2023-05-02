@@ -50,7 +50,7 @@ const defaultOptions = {
  * @description Модификкация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 0.4.1
+ * @version 0.4.2
  */
 class OnlyScroll {
     /**
@@ -192,7 +192,6 @@ class OnlyScroll {
      */
     public setValue = (value: number) => {
         this.scrollContainer.scrollTop = value;
-        this.sync()
     }
 
     /**
