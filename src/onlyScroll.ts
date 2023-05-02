@@ -299,7 +299,6 @@ class OnlyScroll {
     public setValue({ x, y }: Partial<Delta2D>) {
         this.scrollContainer.scrollTop = y ?? this.position.y;
         this.scrollContainer.scrollLeft = x ?? this.position.x;
-        this.sync()
     }
 
     /**
