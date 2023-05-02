@@ -85,11 +85,17 @@ function wheelCalculate(wheelEvent: WheelEvent) {
 const wheelFunctions: Record<OnlyScrollModes, EventListener> = {
     vertical: function(this: OnlyScroll, e: Event) {
         const { pixelY } = wheelCalculate(<WheelEvent>e);
-        this.targetPosition.y = Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0);
+        this.targetPosition = {
+            x: 0,
+            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
+        };
     },
     horizontal: function(this: OnlyScroll, e: Event) {
         const { pixelX } = wheelCalculate(<WheelEvent>e);
-        this.targetPosition.x = Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0);
+        this.targetPosition = {
+            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
+            y: 0
+        }
     },
     free: function(this: OnlyScroll, e: Event) {
         const { pixelX, pixelY } = wheelCalculate(<WheelEvent>e);
@@ -154,7 +160,7 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
  * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 1.0.0
+ * @version 1.0.1-beta
  */
 class OnlyScroll {
     /**
