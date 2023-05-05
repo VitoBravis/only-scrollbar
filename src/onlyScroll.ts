@@ -160,7 +160,7 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
  * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 1.0.1-beta
+ * @version 1.0.2-beta
  */
 class OnlyScroll {
     /**
@@ -431,11 +431,13 @@ class OnlyScroll {
     }
 
     private syncPos() {
-        const currentPosition = { y: this.scrollContainer.scrollTop, x: this.scrollContainer.scrollLeft }
-        this.easedPosition = currentPosition;
-        this.targetPosition = currentPosition;
-        this.lastPosition = currentPosition;
-        this.position = currentPosition;
+        requestAnimationFrame(() => {
+            const currentPosition = { y: this.scrollContainer.scrollTop, x: this.scrollContainer.scrollLeft }
+            this.easedPosition = currentPosition;
+            this.targetPosition = currentPosition;
+            this.lastPosition = currentPosition;
+            this.position = currentPosition;
+        });
     }
 
     private checkSyncTo() {
