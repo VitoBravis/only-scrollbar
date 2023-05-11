@@ -160,7 +160,7 @@ const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
  * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 1.0.2-beta
+ * @version 1.0.3-beta
  */
 class OnlyScroll {
     /**
@@ -290,7 +290,6 @@ class OnlyScroll {
     public scrollTo({ x, y }: Partial<Delta2D>) {
         if (y === this.position.y && x === this.position.x) return;
 
-        this.sync();
         this.targetPosition = {
             x: x ?? this.position.x,
             y: y ?? this.position.y
