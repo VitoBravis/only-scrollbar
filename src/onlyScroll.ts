@@ -1,4 +1,7 @@
-type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
+import {emit, findElementBySelector} from "./utils/utils";
+import {DEFAULT_OPTIONS, TICK_BY_MODE, WHEEL_BY_MODE} from "./utils/const";
+
+export type ElementOrSelector = HTMLHtmlElement | Element | Window | string;
 type ClassNamesKeys = 'container' | 'lock';
 type ClassNames = Record<ClassNamesKeys, string>;
 /**
@@ -36,125 +39,6 @@ export interface Delta2D {
     x: number;
     y: number;
 }
-
-const isIosDevice =
-    typeof window !== 'undefined' &&
-    window.navigator &&
-    window.navigator.platform &&
-    (/iP(ad|hone|od)/.test(window.navigator.platform) ||
-        (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1));
-
-const preventDefault: EventListener = (event: Event) => {
-    if ((<TouchEvent>event).touches.length > 1) return;
-    if (event.preventDefault) event.preventDefault();
-}
-
-/**
- * @description Набор настроек скрола по умолчанию
- */
-const defaultOptions: Required<Omit<OnlyScrollOptions, 'eventContainer'>> = {
-    damping: 1,
-    mode: "vertical"
-}
-
-const emit = (container: OnlyScroll["eventContainer"], eventName: OnlyScrollEvents) => {
-    const event = new CustomEvent(eventName);
-    container.dispatchEvent(event)
-}
-
-/**
- * @todo Перенести в helpers
- * @param wheelEvent
- */
-function wheelCalculate(wheelEvent: WheelEvent) {
-    let deltaY = wheelEvent.deltaY;
-    let deltaX = wheelEvent.deltaX;
-
-    if (wheelEvent.deltaMode) {
-        const deltaMultiply = wheelEvent.deltaMode == 1 ? 40 : 800;
-        deltaX *= deltaMultiply;
-        deltaY *= deltaMultiply;
-    }
-
-    return {
-        pixelX: deltaX,
-        pixelY: deltaY
-    }
-}
-
-const wheelFunctions: Record<OnlyScrollModes, EventListener> = {
-    vertical: function(this: OnlyScroll, e: Event) {
-        const { pixelY } = wheelCalculate(<WheelEvent>e);
-        this.targetPosition = {
-            x: 0,
-            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
-        };
-    },
-    horizontal: function(this: OnlyScroll, e: Event) {
-        const { pixelX } = wheelCalculate(<WheelEvent>e);
-        this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
-            y: 0
-        }
-    },
-    free: function(this: OnlyScroll, e: Event) {
-        const { pixelX, pixelY } = wheelCalculate(<WheelEvent>e);
-        this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
-            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
-        };
-    }
-}
-
-const tickByMode: Record<OnlyScrollModes, FrameRequestCallback> = {
-    vertical: function(this: OnlyScroll) {
-        this.easedPosition = {
-            x: 0,
-            y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
-        }
-        this.scrollContainer.scrollTop = Math.round(this.easedPosition.y);
-
-        if (this.lastPosition.y === this.easedPosition.y) {
-            this.rafID = null;
-            return;
-        }
-
-        this.lastPosition = this.easedPosition;
-        this.rafID = requestAnimationFrame(this.tick);
-    },
-    horizontal: function(this: OnlyScroll) {
-        this.easedPosition = {
-            x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
-            y: 0
-        }
-        this.scrollContainer.scrollLeft = Math.round(this.easedPosition.x);
-
-        if (this.lastPosition.x === this.easedPosition.x) {
-            this.rafID = null;
-            return;
-        }
-
-        this.lastPosition = this.easedPosition;
-        this.rafID = requestAnimationFrame(this.tick);
-    },
-    free: function(this: OnlyScroll) {
-        this.easedPosition = {
-            x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
-            y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
-        }
-        this.scrollContainer.scrollTop = Math.round(this.easedPosition.y);
-        this.scrollContainer.scrollLeft = Math.round(this.easedPosition.x);
-
-        if (this.lastPosition.y === this.easedPosition.y && this.lastPosition.x === this.easedPosition.x) {
-            this.rafID = null;
-            return;
-        }
-
-        this.lastPosition = this.easedPosition;
-        this.rafID = requestAnimationFrame(this.tick);
-    },
-}
-
 
 /**
  * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
@@ -201,21 +85,18 @@ class OnlyScroll {
 
     private isDisable: boolean;
 
-    private previousBodyPosition: any;
-    private initialClientY: number;
-    private documentListenerAdded: boolean;
 
     private readonly setTargetPosition: EventListener;
     public readonly tick: FrameRequestCallback;
 
     constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollOptions) {
-        const _scrollContainer =  this.findElementBySelector(element);
+        const _scrollContainer =  findElementBySelector(element);
 
         if (!_scrollContainer) throw new Error('scrollElement does not exist');
 
         this.scrollContainer = _scrollContainer;
 
-        const _eventContainer = this.findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
+        const _eventContainer = findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
         this.eventContainer = _eventContainer === document.scrollingElement ? window : _eventContainer;
 
         this.position = { x: 0, y: 0 };
@@ -225,16 +106,13 @@ class OnlyScroll {
         this.lastDirection = null;
         this.isLocked = false;
         this.rafID = null
-        this.damping = (options?.damping ?? defaultOptions.damping) * 0.1;
-        this.mode = options?.mode ?? defaultOptions.mode;
+        this.damping = (options?.damping ?? DEFAULT_OPTIONS.damping) * 0.1;
+        this.mode = options?.mode ?? DEFAULT_OPTIONS.mode;
         this.lastHash = window.location.hash;
         this.isDisable = false;
 
-        this.initialClientY = -1;
-        this.documentListenerAdded = false;
-
-        this.setTargetPosition = wheelFunctions[this.mode].bind(this);
-        this.tick = tickByMode[this.mode].bind(this);
+        this.setTargetPosition = WHEEL_BY_MODE[this.mode].bind(this);
+        this.tick = TICK_BY_MODE[this.mode].bind(this);
 
         this.init();
     }
@@ -313,12 +191,7 @@ class OnlyScroll {
     public lock() {
         if (this.isLocked) return;
 
-        if (isIosDevice) {
-            this.disableIosScroll();
-        } else {
-            this.scrollContainer.style.overflow = 'hidden';
-        }
-
+        this.scrollContainer.style.overflow = 'hidden';
         this.scrollContainer.classList.add(OnlyScroll.classNames.lock);
         this.removeEventListener("wheel", this.onWheel);
         this.isLocked = true
@@ -331,12 +204,7 @@ class OnlyScroll {
     public unlock() {
         if (!this.isLocked) return;
 
-        if (isIosDevice) {
-            this.enableIosScroll();
-        } else {
-            this.scrollContainer.style.overflow = 'auto';
-        }
-
+        this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.classList.remove(OnlyScroll.classNames.lock);
         this.addEventListener("wheel", this.onWheel, { passive: false });
         this.isLocked = false;
@@ -367,18 +235,6 @@ class OnlyScroll {
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.removeEventListener("scroll", this.onScroll);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
-    }
-
-    /**
-     * @todo Перенести в helpers
-     * @param selector
-     */
-    private findElementBySelector(selector: ElementOrSelector | null | undefined) {
-        if (selector !== window && selector !== document.scrollingElement) {
-            return typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : <HTMLElement>selector;
-        } else {
-            return <HTMLElement>document.scrollingElement ?? document.body;
-        }
     }
 
     private init() {
@@ -463,83 +319,6 @@ class OnlyScroll {
     private enable() {
         this.isDisable = false;
         this.sync();
-    }
-
-    private disableIosScroll() {
-        requestAnimationFrame(() => {
-            if (this.previousBodyPosition === undefined) {
-                this.previousBodyPosition = {
-                    position: document.body.style.position,
-                    top: document.body.style.top,
-                    left: document.body.style.left
-                };
-
-                // Update the dom inside an animation frame
-                const {scrollY, scrollX, innerHeight} = window;
-                document.body.style.position = 'fixed';
-                document.body.style.top = `${-scrollY}px`;
-                document.body.style.left = `${-scrollX}px`;
-
-                setTimeout(() => window.requestAnimationFrame(() => {
-                    // Attempt to check if the bottom bar appeared due to the position change
-                    const bottomBarHeight = innerHeight - window.innerHeight;
-                    if (bottomBarHeight && scrollY >= innerHeight) {
-                        // Move the content further up so that the bottom bar doesn't hide it
-                        document.body.style.top = -(scrollY + bottomBarHeight) + 'px';
-                    }
-                }), 300)
-            }
-        })
-
-        this.scrollContainer.ontouchstart = (event: TouchEvent) => {
-            if (event.targetTouches.length === 1) {
-                this.initialClientY = event.targetTouches[0].clientY;
-            }
-        };
-        this.scrollContainer.ontouchmove = (event: TouchEvent) => {
-            if (event.targetTouches.length === 1) {
-                const clientY = event.targetTouches[0].clientY - this.initialClientY;
-
-                if (this.scrollContainer && this.scrollContainer.scrollTop === 0 && clientY > 0) {
-                    preventDefault(event);
-                }
-
-                if (this.scrollContainer.scrollHeight - this.scrollContainer.scrollTop <= this.scrollContainer.clientHeight && clientY < 0) {
-                    preventDefault(event);
-                }
-
-                event.stopPropagation();
-                return;
-            }
-        };
-
-        if (!this.documentListenerAdded) {
-            document.addEventListener('touchmove', preventDefault, { passive: false });
-            this.documentListenerAdded = true;
-        }
-    }
-
-    private enableIosScroll() {
-        this.scrollContainer.ontouchstart = null;
-        this.scrollContainer.ontouchmove = null;
-
-        if (this.documentListenerAdded) {
-            document.removeEventListener('touchmove', preventDefault);
-            this.documentListenerAdded = false;
-        }
-
-        if (this.previousBodyPosition !== undefined) {
-            const y = -parseInt(document.body.style.top, 10);
-            const x = -parseInt(document.body.style.left, 10);
-
-            document.body.style.position = this.previousBodyPosition.position;
-            document.body.style.top = this.previousBodyPosition.top;
-            document.body.style.left = this.previousBodyPosition.left;
-
-            window.scrollTo(x, y);
-
-            this.previousBodyPosition = undefined;
-        }
     }
 }
 
