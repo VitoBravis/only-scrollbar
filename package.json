@@ -7,7 +7,7 @@
     "scripts": {
         "build": "webpack --config webpack.config.js",
         "dev": "npm run md && webpack serve --config webpack.config.dev.js",
-        "demo": "npm run md && webpack serve --config webpack.config.demo.js",
+        "demo": "npm run md && webpack --config webpack.config.demo.js",
         "md": "node showdown.js",
         "prepublishOnly": "npm run build"
     },
