@@ -7,7 +7,7 @@ module.exports = {
     mode: "production",
     entry: "./demo-src/demo.js",
     output: {
-        path: path.join(__dirname, 'demo'),
+        path: path.join(__dirname, 'dist'),
         filename: 'demo.js'
     },
     plugins: [
