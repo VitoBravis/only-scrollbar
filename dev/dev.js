@@ -1,5 +1,5 @@
-import '../demo/styles.css';
-import '../demo/demo';
+import '../docs/styles.css';
+import '../docs/demo';
 
 import './styles.css';
 
