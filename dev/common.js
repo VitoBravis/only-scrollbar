@@ -1,4 +1,3 @@
-import '../demo-src/demo';
-
+import './demo';
 import './styles.css';
 

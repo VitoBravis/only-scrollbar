@@ -4,7 +4,7 @@ const path = require('path');
 
 module.exports = {
     mode: "development",
-    entry: "./dev/dev.js",
+    entry: "./dev/common.js",
     output: {
         path: path.join(__dirname, 'build'),
         filename: 'dev.js'
