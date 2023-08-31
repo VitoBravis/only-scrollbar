@@ -1,24 +1,22 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require('path');
 
 module.exports = {
-    mode: "development",
-    entry: "./dev/dev.js",
+    mode: "production",
+    entry: "./demo-src/demo.js",
     output: {
-        path: path.join(__dirname, 'build'),
-        filename: 'dev.js'
+        path: path.join(__dirname, 'demo'),
+        filename: 'demo.js'
     },
     plugins: [
         new HtmlWebpackPlugin({
             filename: 'index.html',
-            template: path.join(__dirname, 'dev', 'index.html')
-        }),
-        new HtmlWebpackPlugin({
-            filename: 'demo.html',
             template: path.join(__dirname, 'demo-src', 'index.html')
         }),
-        new MiniCssExtractPlugin()
+        new MiniCssExtractPlugin(),
+        new CleanWebpackPlugin()
     ],
     module: {
         rules: [
@@ -27,9 +25,5 @@ module.exports = {
                 use: [MiniCssExtractPlugin.loader, "css-loader"],
             },
         ],
-    },
-    devServer: {
-        port: 3005,
-        hot: true
     }
 }

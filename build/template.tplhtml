@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>only-scrollbar</title>
-    <link rel="stylesheet" href="./styles.css"/>
-    <script type="module" src="./demo.js" defer></script>
 </head>
 <body>
 <aside class="info">window.scrollY = 0px</aside>

@@ -1,3 +1,4 @@
+import './styles.css';
 import OnlyScrollbar from "../src/onlyScrollbar.js";
 
 const scroll = new OnlyScrollbar(window, { damping: 0.7 })
