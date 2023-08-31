@@ -34,9 +34,8 @@ export interface Delta2D {
 }
 /**
  * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
- * @description Пока не работает на старых браузеров, которые не поддерживают пассивные события
  * @class
- * @version 1.0.0-beta.1
+ * @version 1.0.0
  */
 declare class OnlyScrollbar {
     /**
@@ -57,19 +56,19 @@ declare class OnlyScrollbar {
      * @description Состояние, отображающее блокировку скрола
      */
     isLocked: boolean;
-    position: Delta2D;
-    targetPosition: Delta2D;
-    easedPosition: Delta2D;
-    lastPosition: Delta2D;
+    private position: Delta2D;
+    private targetPosition: Delta2D;
+    private easedPosition: Delta2D;
+    private lastPosition: Delta2D;
     readonly mode: OnlyScrollbarModes;
     readonly damping: number;
     private syncTo;
-    rafID: number | null;
+    private rafID: number | null;
     private lastDirection;
     private lastHash;
     private isDisable;
     private readonly setTargetPosition;
-    readonly tick: FrameRequestCallback;
+    private readonly tick: FrameRequestCallback;
     constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollbarOptions);
     /**
      * @description Последнее направление скрола в числовом представлении

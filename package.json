@@ -1,6 +1,6 @@
 {
     "name": "only-scrollbar",
-    "version": "1.0.0-beta.1",
+    "version": "1.0.0",
     "description": "smooth-scroll",
     "main": "dist/onlyScroll.js",
     "types": "dist/onlyScroll.d.ts",
@@ -29,7 +29,7 @@
     "bugs": {
         "url": "https://github.com/VitoBravis/only-scroll/issues"
     },
-    "homepage": "https://github.com/VitoBravis/only-scroll#onlyscroll",
+    "homepage": "https://vitobravis.github.io/only-scroll/",
     "devDependencies": {
         "@types/node": "^20.5.7",
         "clean-webpack-plugin": "^4.0.0",
