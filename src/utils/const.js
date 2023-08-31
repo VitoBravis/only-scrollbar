@@ -1,13 +1,16 @@
-import OnlyScroll, {OnlyScrollModes, OnlyScrollOptions} from "../onlyScroll";
-import {wheelCalculate} from "./utils";
+import {wheelCalculate} from "./utils.js";
 
-export const DEFAULT_OPTIONS: Required<Omit<OnlyScrollOptions, 'eventContainer'>> = {
+const DEFAULT_OPTIONS = {
     damping: 1,
     mode: "vertical"
 }
 
-export const TICK_BY_MODE: Record<OnlyScrollModes, FrameRequestCallback> = {
-    vertical: function(this: OnlyScroll) {
+/**
+ *
+ * @type Object
+ */
+const TICK_BY_MODE = {
+    vertical: function() {
         this.easedPosition = {
             x: 0,
             y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
@@ -22,7 +25,7 @@ export const TICK_BY_MODE: Record<OnlyScrollModes, FrameRequestCallback> = {
         this.lastPosition = this.easedPosition;
         this.rafID = requestAnimationFrame(this.tick);
     },
-    horizontal: function(this: OnlyScroll) {
+    horizontal: function() {
         this.easedPosition = {
             x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
             y: 0
@@ -37,7 +40,7 @@ export const TICK_BY_MODE: Record<OnlyScrollModes, FrameRequestCallback> = {
         this.lastPosition = this.easedPosition;
         this.rafID = requestAnimationFrame(this.tick);
     },
-    free: function(this: OnlyScroll) {
+    free: function() {
         this.easedPosition = {
             x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
             y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
@@ -54,27 +57,32 @@ export const TICK_BY_MODE: Record<OnlyScrollModes, FrameRequestCallback> = {
         this.rafID = requestAnimationFrame(this.tick);
     },
 }
-
-export const WHEEL_BY_MODE: Record<OnlyScrollModes, EventListener> = {
-    vertical: function(this: OnlyScroll, e: Event) {
-        const { pixelY } = wheelCalculate(<WheelEvent>e);
+/**
+ *
+ * @type Object
+ */
+const WHEEL_BY_MODE = {
+    vertical: function(e) {
+        const { y } = wheelCalculate(e);
         this.targetPosition = {
             x: 0,
-            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
+            y: Math.max(Math.min( this.targetPosition.y + y, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
         };
     },
-    horizontal: function(this: OnlyScroll, e: Event) {
-        const { pixelX } = wheelCalculate(<WheelEvent>e);
+    horizontal: function(e) {
+        const { x } = wheelCalculate(e);
         this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
+            x: Math.max(Math.min( this.targetPosition.x + x, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
             y: 0
         }
     },
-    free: function(this: OnlyScroll, e: Event) {
-        const { pixelX, pixelY } = wheelCalculate(<WheelEvent>e);
+    free: function(e) {
+        const { x, y } = wheelCalculate(e);
         this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + pixelX, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
-            y: Math.max(Math.min( this.targetPosition.y + pixelY, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
+            x: Math.max(Math.min( this.targetPosition.x + x, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
+            y: Math.max(Math.min( this.targetPosition.y + y, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
         };
     }
 }
+
+export { WHEEL_BY_MODE, TICK_BY_MODE, DEFAULT_OPTIONS, wheelCalculate}

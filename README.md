@@ -1,4 +1,4 @@
-# OnlyScroll
+# OnlyScrollbar
 
 Кастомный скроллбар, который позволяет дополнить стандартное поведение браузера и добавляет инерцию для увеличения плавности
 
@@ -15,23 +15,23 @@ npm install only-scrollbar
 Рекомендуется использование синтаксиса ES6, с применением `import` 
 
 ```ts
-import OnlyScroll from 'only-scrollbar';
+import OnlyScrollbar from 'only-scrollbar';
 
-const scroll = new OnlyScroll(document.querySelector('.scroll-container'));
+const scroll = new OnlyScrollbar(document.querySelector('.scroll-container'));
 ```
 
 Контейнер, в котором будет принициализирован скрол должен придерживаться тех же правил, что и обычный скрол-контейнер:
 - Контейнер должен быть ограничен по высоте
 - Значение *css*-правила `overflow` в данном случае необязательно, т.к. правило `overflow: auto` добавляется автоматически
 
-Конструктор класса `OnlyScroll` принимает до двух аргументов:
+Конструктор класса `OnlyScrollbar` принимает до двух аргументов:
 
 | argument | type | description |
-| :-------: | :--: | :---------- |
+| :------: | :--: | :---------- |
 | element | `HTMLHtmlElement \| Element \| Window \| string \| null \| undefined` | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является основным контейнером внутри котрого происходит скрол и все расчеты |
-| element | `OnlyScrollOptions \| undefined` | Параметры инициализации |
+| element | `OnlyScrollbarOptions \| undefined` | Параметры инициализации |
 
-## Возможные параметры инициализации (OnlyScrollOptions)
+## Возможные параметры инициализации (OnlyScrollbarOptions)
 
 | parameter | type | default | description |
 | :-------: | :--: | :-----: | :---------- |
@@ -40,9 +40,9 @@ const scroll = new OnlyScroll(document.querySelector('.scroll-container'));
 | easing | `string` | `'default'` | Временно не использующийся параметр, предполагается выбор дополнительных Безье функций  |
 
 ```ts
-import OnlyScroll from 'only-scrollbar';
+import OnlyScrollbar from 'only-scrollbar';
 
-const scroll = new OnlyScroll('#scroll-container-id', {
+const scroll = new OnlyScrollbar('#scroll-container-id', {
     damping: 0.8,
     eventContainer: window
 });
@@ -50,38 +50,38 @@ const scroll = new OnlyScroll('#scroll-container-id', {
 
 ## API
 
-Для обращения к свойствам и методам класса `OnlyScroll`, требуется создать экземпляр класса
+Для обращения к свойствам и методам класса `OnlyScrollbar`, требуется создать экземпляр класса
 
 ```ts
-import OnlyScroll from 'only-scrollbar';
+import OnlyScrollbar from 'only-scrollbar';
 
-const scroll = new OnlyScroll('.scroll-container');
+const scroll = new OnlyScrollbar('.scroll-container');
 scroll.destroy();
 ```
 
 - Свойства
-    - [OnlyScroll.classNames](#onlyScrollclassNames)
-    - [OnlyScroll.scrollContainer](#onlyscrollscrollContainer)
-    - [OnlyScroll.eventContainer](#onlyscrolleventContainer)
-    - [OnlyScroll.velocity](#onlyscrollvelocity)
-    - [OnlyScroll.progress](#onlyscrollprogress)
-    - [OnlyScroll.isLocked](#onlyscrollisLocked)
-    - [OnlyScroll.direction](#onlyscrolldirection)
-    - [OnlyScroll.isLocked](#onlyscrollisLocked)
+    - [OnlyScrollbar.classNames](#OnlyScrollbarclassNames)
+    - [OnlyScrollbar.scrollContainer](#OnlyScrollbarscrollContainer)
+    - [OnlyScrollbar.eventContainer](#OnlyScrollbareventContainer)
+    - [OnlyScrollbar.velocity](#OnlyScrollbarvelocity)
+    - [OnlyScrollbar.progress](#OnlyScrollbarprogress)
+    - [OnlyScrollbar.isLocked](#OnlyScrollbarisLocked)
+    - [OnlyScrollbar.direction](#OnlyScrollbardirection)
+    - [OnlyScrollbar.isLocked](#OnlyScrollbarisLocked)
 
 - Методы
-    - [OnlyScroll.sync](#onlyscrollsync)
-    - [OnlyScroll.scrollTo](#onlyscrollscrollTo)
-    - [OnlyScroll.setValue](#onlyscrollsetValue)
-    - [OnlyScroll.lock](#onlyscrolllock)
-    - [OnlyScroll.unlock](#onlyscrollunlock)
-    - [OnlyScroll.addScrollListener](#onlyscrolladdScrollListener)
-    - [OnlyScroll.removeScrollListener](#onlyscrollremoveScrollListener)
-    - [OnlyScroll.destroy](#onlyscrolldestroy)
+    - [OnlyScrollbar.sync](#OnlyScrollbarsync)
+    - [OnlyScrollbar.scrollTo](#OnlyScrollbarscrollTo)
+    - [OnlyScrollbar.setValue](#OnlyScrollbarsetValue)
+    - [OnlyScrollbar.lock](#OnlyScrollbarlock)
+    - [OnlyScrollbar.unlock](#OnlyScrollbarunlock)
+    - [OnlyScrollbar.addScrollListener](#OnlyScrollbaraddScrollListener)
+    - [OnlyScrollbar.removeScrollListener](#OnlyScrollbarremoveScrollListener)
+    - [OnlyScrollbar.destroy](#OnlyScrollbardestroy)
 
 ### Свойства
 
-#### OnlyScroll.classNames
+#### OnlyScrollbar.classNames
 
 - Type: `ClassNames`
 
@@ -94,7 +94,7 @@ type ClassName = {
 }
 ```
 
-#### OnlyScroll.scrollContainer
+#### OnlyScrollbar.scrollContainer
 
 - Type: `HTMLElement`
 
@@ -104,7 +104,7 @@ type ClassName = {
 > 
 > Объект `window` не может быть контейнером для скрола, но вмето него будет установлен `document.scrollingElement`
 
-#### OnlyScroll.eventContainer
+#### OnlyScrollbar.eventContainer
 
 - Type: `HTMLElement | Window`
 
@@ -112,13 +112,13 @@ type ClassName = {
 
 > В отличие от `scrollContainer` может быть объектом `window`, но не `document.scrollingElement`
 
-#### OnlyScroll.velocity
+#### OnlyScrollbar.velocity
 
 - Type: `number`
 
 Текущее ускорение скрола. Показывает с какой скоростью изменяется значение позиции
 
-#### OnlyScroll.progress
+#### OnlyScrollbar.progress
 
 - Type: `number`
 
@@ -126,7 +126,7 @@ type ClassName = {
 
 Возвращает число от 0 до 100, где 0 = Начальная позиция скрола, 100 = Конечная позиция скрола
 
-#### OnlyScroll.isLocked
+#### OnlyScrollbar.isLocked
 
 - Type: `boolean`
 
@@ -134,7 +134,7 @@ type ClassName = {
 
 Заблокированный скрол не позволяет выполняться событиям синхронизации и событиям для перерасчета позиции. Не блокирует скрол на touch-устройствах
 
-#### OnlyScroll.direction
+#### OnlyScrollbar.direction
 
 - Type: `boolean`
 
@@ -142,7 +142,7 @@ type ClassName = {
 
 Возвращает число, где `1 = Up`, `-1 = Down`
 
-#### OnlyScroll.y
+#### OnlyScrollbar.y
 
 - Type: `number`
 
@@ -150,7 +150,7 @@ type ClassName = {
 
 ### Методы
 
-#### OnlyScroll.sync
+#### OnlyScrollbar.sync
 
 ```ts
 scroll.sync(): void
@@ -160,14 +160,14 @@ scroll.sync(): void
 
 Вызывается автоматически по окончанию событий скрола, но можно вызвать вручную для преждевременной синхронизации и обнуления анимации
 
-#### OnlyScroll.scrollTo
+#### OnlyScrollbar.scrollTo
 
 ```ts
 scroll.scrollTo(positionY: number): void
 ```
 
 | argument | type | description |
-| --- | :-: | --- |
+| :------: | :--: | :---------- |
 | `positionY` | `number` | Числовое значение целевой позиции скрола |
 
 Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений
@@ -177,14 +177,14 @@ Example:
 scroll.scrollTo(document.querySelector('#anchor').offsetTop);
 ```
 
-#### OnlyScroll.setValue
+#### OnlyScrollbar.setValue
 
 ```ts
 scroll.setValue(value: number): void
 ```
 
 | argument | type | description |
-| --- | :-: | --- |
+| :------: | :--: | :---------- |
 | `value` | `number` | Числовое значение целевой позиции скрола |
 
 Установка конкретного значения скрол позиции, без применения каких-либо анимаций
@@ -194,7 +194,7 @@ Example:
 scroll.setValue(document.querySelector('#anchor').offsetTop);
 ```
 
-#### OnlyScroll.lock
+#### OnlyScrollbar.lock
 
 ```ts
 scroll.lock(): void
@@ -204,7 +204,7 @@ scroll.lock(): void
 
 Блокировка также прервет запущенные процессы по перерасчету позиции
 
-#### OnlyScroll.unlock
+#### OnlyScrollbar.unlock
 
 ```ts
 scroll.unlock(): void
@@ -214,14 +214,14 @@ scroll.unlock(): void
 
 Запускает перерасчет позиции скрола
 
-#### OnlyScroll.addScrollListener
+#### OnlyScrollbar.addScrollListener
 
 ```ts
 scroll.addScrollListener(eventHandler: EventHandler): void
 ```
 
 | argument | type | description |
-| --- | :-: | --- |
+| :------: | :--: | :---------- |
 | `eventHandler` | `EventHandler` | Стандартная функция обработчик события скрола |
 
 Добавляет обработчик события скрола на eventContainer
@@ -233,14 +233,14 @@ const scrollHandler = () => {
 scroll.addScrollListener(scrollHandler);
 ```
 
-#### OnlyScroll.removeScrollListener
+#### OnlyScrollbar.removeScrollListener
 
 ```ts
 scroll.removeScrollListener(eventHandler: EventHandler): void
 ```
 
 | argument | type | description |
-| --- | :-: | --- |
+| :------: | :--: | :---------- |
 | `eventHandler` | `EventHandler` | Стандартная функция обработчик события скрола |
 
 Удаляет существующий обработчик события скрола на eventContainer
@@ -252,7 +252,7 @@ const scrollHandler = () => {
 scroll.removeScrollListener(scrollHandler);
 ```
 
-#### OnlyScroll.destroy
+#### OnlyScrollbar.destroy
 
 ```ts
 scroll.destroy(): void
