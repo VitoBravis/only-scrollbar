@@ -16,7 +16,7 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             filename: 'demo.html',
-            template: path.join(__dirname, 'demo-src', 'index.html')
+            template: path.join(__dirname, 'dev', 'demo.html')
         }),
         new MiniCssExtractPlugin()
     ],
