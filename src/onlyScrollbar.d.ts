@@ -3,7 +3,7 @@ declare type ClassNamesKeys = 'container' | 'lock';
 declare type ClassNames = Record<ClassNamesKeys, string>;
 /**
  * @description Направление скрола
- * @description 1 = Up, -1 = Down
+ * @description 1 = Down|Right, -1 = Up|Left
  */
 export declare type Direction = Record<keyof Delta2D, -1 | 1>;
 /**
@@ -35,7 +35,7 @@ export interface Delta2D {
 /**
  * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @class
- * @version 1.0.0
+ * @version 1.0.1
  */
 declare class OnlyScrollbar {
     /**
@@ -56,7 +56,7 @@ declare class OnlyScrollbar {
      * @description Состояние, отображающее блокировку скрола
      */
     isLocked: boolean;
-    private position: Delta2D;
+    position: Delta2D;
     private targetPosition: Delta2D;
     private easedPosition: Delta2D;
     private lastPosition: Delta2D;

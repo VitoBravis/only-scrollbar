@@ -20,7 +20,7 @@ import OnlyScrollbar from 'only-scrollbar';
 const scroll = new OnlyScrollbar(document.querySelector('.scroll-container'));
 ```
 
-Контейнер, в котором будет принициализирован скрол должен придерживаться тех же правил, что и обычный скрол-контейнер:
+Контейнер, в котором будет проинициализирован скрол должен придерживаться тех же правил, что и обычный скрол-контейнер:
 - Контейнер должен быть ограничен по высоте
 - Значение *css*-правила `overflow` в данном случае необязательно, т.к. правило `overflow: auto` добавляется автоматически
 
@@ -37,14 +37,15 @@ const scroll = new OnlyScrollbar(document.querySelector('.scroll-container'));
 | :-------: | :--: | :-----: | :---------- |
 | damping | `number` | `1` | Сила замедления инерции. Рекомендуется указывать значения в промежутке от 0 до 1 |
 | eventContainer | `HTMLHtmlElement \| Element \| Window \| string` | scrollContainer | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является элементом, который будет обрабатывать события, предназначавшиеся скрол контейнеру. По умолчанию равен основному скрол контейнеру |
-| easing | `string` | `'default'` | Временно не использующийся параметр, предполагается выбор дополнительных Безье функций  |
+| mode | `"vertical" | "horizontal" | "free"` | `"vertical"` | Допустимое направление скрола 
 
 ```ts
 import OnlyScrollbar from 'only-scrollbar';
 
 const scroll = new OnlyScrollbar('#scroll-container-id', {
     damping: 0.8,
-    eventContainer: window
+    eventContainer: window,
+    mode: 'free'
 });
 ```
 
@@ -78,6 +79,11 @@ scroll.destroy();
     - [OnlyScrollbar.addScrollListener](#OnlyScrollbaraddScrollListener)
     - [OnlyScrollbar.removeScrollListener](#OnlyScrollbarremoveScrollListener)
     - [OnlyScrollbar.destroy](#OnlyScrollbardestroy)
+    
+- События
+    - [scrollEnd](#scrollEnd)
+    - [changeDirectionY](#changeDirectionY)
+    - [changeDirectionX](#changeDirectionX)
 
 ### Свойства
 
@@ -112,20 +118,6 @@ type ClassName = {
 
 > В отличие от `scrollContainer` может быть объектом `window`, но не `document.scrollingElement`
 
-#### OnlyScrollbar.velocity
-
-- Type: `number`
-
-Текущее ускорение скрола. Показывает с какой скоростью изменяется значение позиции
-
-#### OnlyScrollbar.progress
-
-- Type: `number`
-
-Прогресс контейнера скрола в процентном соотношении. 
-
-Возвращает число от 0 до 100, где 0 = Начальная позиция скрола, 100 = Конечная позиция скрола
-
 #### OnlyScrollbar.isLocked
 
 - Type: `boolean`
@@ -136,15 +128,28 @@ type ClassName = {
 
 #### OnlyScrollbar.direction
 
-- Type: `boolean`
+- Type: `Direction`
+```ts
+type Direction = {
+    x: 1 | -1;
+    y: 1 | -1;
+}
+```
 
 Последнее направление скрола. 
 
-Возвращает число, где `1 = Up`, `-1 = Down`
+Возвращает объект с полями y и x, где `1 = Down/Right`, `-1 = Up/Left`
 
-#### OnlyScrollbar.y
+#### OnlyScrollbar.position
 
-- Type: `number`
+- Type: `Delta2D`
+
+```ts
+type Delta2D = {
+    x: number;
+    y: number;
+}
+```
 
 Текущее значение позиции скрола
 
@@ -163,18 +168,18 @@ scroll.sync(): void
 #### OnlyScrollbar.scrollTo
 
 ```ts
-scroll.scrollTo(positionY: number): void
+scroll.scrollTo(position: Delta2D): void
 ```
 
 | argument | type | description |
 | :------: | :--: | :---------- |
-| `positionY` | `number` | Числовое значение целевой позиции скрола |
+| `position` | `Delta2D` | Объект с целевыми координатами x и y |
 
 Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений
 
 Example:
 ```ts
-scroll.scrollTo(document.querySelector('#anchor').offsetTop);
+scroll.scrollTo({x: 0, y: document.querySelector('#anchor').offsetTop});
 ```
 
 #### OnlyScrollbar.setValue
@@ -185,13 +190,13 @@ scroll.setValue(value: number): void
 
 | argument | type | description |
 | :------: | :--: | :---------- |
-| `value` | `number` | Числовое значение целевой позиции скрола |
+| `position` | `Delta2D` | Объект с целевыми координатами x и y |
 
 Установка конкретного значения скрол позиции, без применения каких-либо анимаций
 
 Example:
 ```ts
-scroll.setValue(document.querySelector('#anchor').offsetTop);
+scroll.setValue({x: 0, y: document.querySelector('#anchor').offsetTop});
 ```
 
 #### OnlyScrollbar.lock
@@ -214,42 +219,45 @@ scroll.unlock(): void
 
 Запускает перерасчет позиции скрола
 
-#### OnlyScrollbar.addScrollListener
+#### OnlyScrollbar.addEventListener
 
 ```ts
-scroll.addScrollListener(eventHandler: EventHandler): void
+scroll.addEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler, options: AddEventListenerOptions): void
 ```
 
 | argument | type | description |
 | :------: | :--: | :---------- |
-| `eventHandler` | `EventHandler` | Стандартная функция обработчик события скрола |
+| `type` | `OnlyScrollbarEvents` | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
+| `eventHandler` | `EventHandler` | Функция обработчик события |
+| `options` | `AddEventListenerOptions` | Параметры обработчика события |
 
-Добавляет обработчик события скрола на eventContainer
+Добавляет обработчик события на eventContainer
 
 ```ts
-const scrollHandler = () => {
+const scrollEndHandler = () => {
     /* ... */
 }
-scroll.addScrollListener(scrollHandler);
+scroll.addEventListener('scrollEnd', scrollEndHandler, { once: true });
 ```
 
-#### OnlyScrollbar.removeScrollListener
+#### OnlyScrollbar.removeEventListener
 
 ```ts
-scroll.removeScrollListener(eventHandler: EventHandler): void
+scroll.removeEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler): void
 ```
 
 | argument | type | description |
 | :------: | :--: | :---------- |
-| `eventHandler` | `EventHandler` | Стандартная функция обработчик события скрола |
+| `type` | `OnlyScrollbarEvents` | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
+| `eventHandler` | `EventHandler` | Функция обработчик события |
 
-Удаляет существующий обработчик события скрола на eventContainer
+Удаляет существующий обработчик события на eventContainer
 
 ```ts
-const scrollHandler = () => {
+const scrollEndHandler = () => {
     /* ... */
 }
-scroll.removeScrollListener(scrollHandler);
+scroll.removeEventListener('scrollEnd', scrollEndHandler);
 ```
 
 #### OnlyScrollbar.destroy
@@ -259,3 +267,17 @@ scroll.destroy(): void
 ```
 
 Очистка событий, таймеров, классов и атрибутов
+
+### События
+
+#### scrollEnd
+
+Остановка скрола и прекращение всех действий по расчету позиций
+
+#### changeDirectionY
+
+Изменение направления скрола по оси Y
+
+#### changeDirectionX
+
+Изменение направления скрола по оси X
