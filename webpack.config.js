@@ -1,11 +1,13 @@
+const TerserPlugin = require("terser-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 const path = require('path');
 
 module.exports = {
     mode: "production",
-    entry: "./src/onlyScroll.ts",
+    entry: "./src/onlyScrollbar",
     output: {
         path: path.join(__dirname, 'dist'),
-        filename: 'onlyScroll.js',
+        filename: 'onlyScrollbar.js',
         globalObject: 'this',
         library: {
             type: "umd",
@@ -14,14 +16,19 @@ module.exports = {
         },
     },
     optimization: {
-        minimize: true
+        minimize: true,
+        minimizer: [new TerserPlugin({
+            minify: TerserPlugin.uglifyJsMinify
+        })],
     },
-    module: {
-        rules: [
-            {
-                test: /\.ts$/,
-                use: 'ts-loader',
-            }
-        ]
-    }
+    plugins: [
+        new CopyPlugin({
+            patterns: [
+                {
+                    from: path.join(__dirname, 'src', 'onlyScrollbar.d.ts'),
+                    to: path.join(__dirname, 'dist', 'onlyScrollbar.d.ts')
+                },
+            ],
+        }),
+    ]
 }
