@@ -64,11 +64,9 @@ scroll.destroy();
     - [OnlyScrollbar.classNames](#OnlyScrollbarclassNames)
     - [OnlyScrollbar.scrollContainer](#OnlyScrollbarscrollContainer)
     - [OnlyScrollbar.eventContainer](#OnlyScrollbareventContainer)
-    - [OnlyScrollbar.velocity](#OnlyScrollbarvelocity)
-    - [OnlyScrollbar.progress](#OnlyScrollbarprogress)
     - [OnlyScrollbar.isLocked](#OnlyScrollbarisLocked)
     - [OnlyScrollbar.direction](#OnlyScrollbardirection)
-    - [OnlyScrollbar.isLocked](#OnlyScrollbarisLocked)
+    - [OnlyScrollbar.position](#OnlyScrollbarposition)
 
 - Методы
     - [OnlyScrollbar.sync](#OnlyScrollbarsync)
@@ -76,8 +74,8 @@ scroll.destroy();
     - [OnlyScrollbar.setValue](#OnlyScrollbarsetValue)
     - [OnlyScrollbar.lock](#OnlyScrollbarlock)
     - [OnlyScrollbar.unlock](#OnlyScrollbarunlock)
-    - [OnlyScrollbar.addScrollListener](#OnlyScrollbaraddScrollListener)
-    - [OnlyScrollbar.removeScrollListener](#OnlyScrollbarremoveScrollListener)
+    - [OnlyScrollbar.addEventListener](#OnlyScrollbaraddEventListener)
+    - [OnlyScrollbar.removeEventListener](#OnlyScrollbarremoveEventListener)
     - [OnlyScrollbar.destroy](#OnlyScrollbardestroy)
     
 - События
