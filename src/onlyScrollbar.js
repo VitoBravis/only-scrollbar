@@ -86,6 +86,15 @@ class OnlyScrollbar {
     scrollTo({ x, y }) {
         if (y === this.position.y && x === this.position.x) return;
 
+        if (!!navigator.maxTouchPoints) {
+            this.scrollContainer.scrollTo({
+                left: x,
+                top: y,
+                behavior: "smooth"
+            })
+            return;
+        }
+
         this.targetPosition = {
             x: x ?? this.position.x,
             y: y ?? this.position.y

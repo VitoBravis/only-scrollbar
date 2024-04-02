@@ -35,7 +35,7 @@ export interface Delta2D {
 /**
  * @description Модификация нативного скрола, работающая по принципу перерасчета текущей позиции с помощью Безье функции.
  * @class
- * @version 1.0.2
+ * @version 1.0.3
  */
 declare class OnlyScrollbar {
     /**
