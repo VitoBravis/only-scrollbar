@@ -13,7 +13,7 @@ const scroll = new OnlyScrollbar('#scroll-container-id', {
 
 const scroll = new OnlyScrollbar('.scroll-container');
 scroll.destroy();
-</code></pre><ul><li><p>Свойства</p><ul><li><a href="#OnlyScrollbarclassNames">OnlyScrollbar.classNames</a></li><li><a href="#OnlyScrollbarscrollContainer">OnlyScrollbar.scrollContainer</a></li><li><a href="#OnlyScrollbareventContainer">OnlyScrollbar.eventContainer</a></li><li><a href="#OnlyScrollbarisLocked">OnlyScrollbar.isLocked</a></li><li><a href="#OnlyScrollbardirection">OnlyScrollbar.direction</a></li><li><a href="#OnlyScrollbarposition">OnlyScrollbar.position</a></li></ul></li><li><p>Методы</p><ul><li><a href="#OnlyScrollbarsync">OnlyScrollbar.sync</a></li><li><a href="#OnlyScrollbarscrollTo">OnlyScrollbar.scrollTo</a></li><li><a href="#OnlyScrollbarsetValue">OnlyScrollbar.setValue</a></li><li><a href="#OnlyScrollbarlock">OnlyScrollbar.lock</a></li><li><a href="#OnlyScrollbarunlock">OnlyScrollbar.unlock</a></li><li><a href="#OnlyScrollbaraddEventListener">OnlyScrollbar.addEventListener</a></li><li><a href="#OnlyScrollbarremoveEventListener">OnlyScrollbar.removeEventListener</a></li><li><a href="#OnlyScrollbardestroy">OnlyScrollbar.destroy</a></li></ul></li><li><p>События</p><ul><li><a href="#scrollEnd">scrollEnd</a></li><li><a href="#changeDirectionY">changeDirectionY</a></li><li><a href="#changeDirectionX">changeDirectionX</a></li></ul></li></ul><h3 id="-2">Свойства</h3><h4 id="onlyscrollbarclassnames">OnlyScrollbar.classNames</h4><ul><li>Type: <code>ClassNames</code></li></ul><p>Перечень основных <em>css</em>-классов, которые добавляются на <code>scrollContainer</code></p><pre><code class="ts language-ts">type ClassName = {
+</code></pre><ul><li><p>Свойства</p><ul><li><a href="#OnlyScrollbarclassNames">OnlyScrollbar.classNames</a></li><li><a href="#OnlyScrollbarscrollContainer">OnlyScrollbar.scrollContainer</a></li><li><a href="#OnlyScrollbareventContainer">OnlyScrollbar.eventContainer</a></li><li><a href="#OnlyScrollbarisLocked">OnlyScrollbar.isLocked</a></li><li><a href="#OnlyScrollbardirection">OnlyScrollbar.direction</a></li><li><a href="#OnlyScrollbarposition">OnlyScrollbar.position</a></li></ul></li><li><p>Методы</p><ul><li><a href="#OnlyScrollbarsync">OnlyScrollbar.sync</a></li><li><a href="#OnlyScrollbarscrollTo">OnlyScrollbar.scrollTo</a></li><li><a href="#OnlyScrollbarsetValue">OnlyScrollbar.setValue</a></li><li><a href="#OnlyScrollbarstop">OnlyScrollbar.stop</a></li><li><a href="#OnlyScrollbarlock">OnlyScrollbar.lock</a></li><li><a href="#OnlyScrollbarunlock">OnlyScrollbar.unlock</a></li><li><a href="#OnlyScrollbaraddEventListener">OnlyScrollbar.addEventListener</a></li><li><a href="#OnlyScrollbarremoveEventListener">OnlyScrollbar.removeEventListener</a></li><li><a href="#OnlyScrollbardestroy">OnlyScrollbar.destroy</a></li></ul></li><li><p>События</p><ul><li><a href="#scrollEnd">scrollEnd</a></li><li><a href="#changeDirectionY">changeDirectionY</a></li><li><a href="#changeDirectionX">changeDirectionX</a></li></ul></li></ul><h3 id="-2">Свойства</h3><h4 id="onlyscrollbarclassnames">OnlyScrollbar.classNames</h4><ul><li>Type: <code>ClassNames</code></li></ul><p>Перечень основных <em>css</em>-классов, которые добавляются на <code>scrollContainer</code></p><pre><code class="ts language-ts">type ClassName = {
     container: string;
     lock: string;
 }
@@ -30,17 +30,31 @@ scroll.destroy();
 </code></pre><table><thead><tr><th style="text-align:center;">argument</th><th style="text-align:center;">type</th><th style="text-align:left;">description</th></tr></thead><tbody><tr><td style="text-align:center;"><code>position</code></td><td style="text-align:center;"><code>Delta2D</code></td><td style="text-align:left;">Объект с целевыми координатами x и y</td></tr></tbody></table><p>Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений</p><p>Example:</p><pre><code class="ts language-ts">scroll.scrollTo({x: 0, y: document.querySelector('#anchor').offsetTop});
 </code></pre><h4 id="onlyscrollbarsetvalue">OnlyScrollbar.setValue</h4><pre><code class="ts language-ts">scroll.setValue(value: number): void
 </code></pre><table><thead><tr><th style="text-align:center;">argument</th><th style="text-align:center;">type</th><th style="text-align:left;">description</th></tr></thead><tbody><tr><td style="text-align:center;"><code>position</code></td><td style="text-align:center;"><code>Delta2D</code></td><td style="text-align:left;">Объект с целевыми координатами x и y</td></tr></tbody></table><p>Установка конкретного значения скрол позиции, без применения каких-либо анимаций</p><p>Example:</p><pre><code class="ts language-ts">scroll.setValue({x: 0, y: document.querySelector('#anchor').offsetTop});
-</code></pre><h4 id="onlyscrollbarlock">OnlyScrollbar.lock</h4><pre><code class="ts language-ts">scroll.lock(): void
-</code></pre><p>Блокирует скрол</p><p>Блокировка также прервет запущенные процессы по перерасчету позиции</p><h4 id="onlyscrollbarunlock">OnlyScrollbar.unlock</h4><pre><code class="ts language-ts">scroll.unlock(): void
-</code></pre><p>Разблокирует скрол.</p><p>Запускает перерасчет позиции скрола</p><h4 id="onlyscrollbaraddeventlistener">OnlyScrollbar.addEventListener</h4><pre><code class="ts language-ts">scroll.addEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler, options: AddEventListenerOptions): void
-</code></pre><table><thead><tr><th style="text-align:center;">argument</th><th style="text-align:center;">type</th><th style="text-align:left;">description</th></tr></thead><tbody><tr><td style="text-align:center;"><code>type</code></td><td style="text-align:center;"><code>OnlyScrollbarEvents</code></td><td style="text-align:left;">Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar</td></tr><tr><td style="text-align:center;"><code>eventHandler</code></td><td style="text-align:center;"><code>EventHandler</code></td><td style="text-align:left;">Функция обработчик события</td></tr><tr><td style="text-align:center;"><code>options</code></td><td style="text-align:center;"><code>AddEventListenerOptions</code></td><td style="text-align:left;">Параметры обработчика события</td></tr></tbody></table><p>Добавляет обработчик события на eventContainer</p><pre><code class="ts language-ts">const scrollEndHandler = () =&gt; {
-    /* ... */
-}
-scroll.addEventListener('scrollEnd', scrollEndHandler, { once: true });
-</code></pre><h4 id="onlyscrollbarremoveeventlistener">OnlyScrollbar.removeEventListener</h4><pre><code class="ts language-ts">scroll.removeEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler): void
-</code></pre><table><thead><tr><th style="text-align:center;">argument</th><th style="text-align:center;">type</th><th style="text-align:left;">description</th></tr></thead><tbody><tr><td style="text-align:center;"><code>type</code></td><td style="text-align:center;"><code>OnlyScrollbarEvents</code></td><td style="text-align:left;">Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar</td></tr><tr><td style="text-align:center;"><code>eventHandler</code></td><td style="text-align:center;"><code>EventHandler</code></td><td style="text-align:left;">Функция обработчик события</td></tr></tbody></table><p>Удаляет существующий обработчик события на eventContainer</p><pre><code class="ts language-ts">const scrollEndHandler = () =&gt; {
-    /* ... */
-}
-scroll.removeEventListener('scrollEnd', scrollEndHandler);
-</code></pre><h4 id="onlyscrollbardestroy">OnlyScrollbar.destroy</h4><pre><code class="ts language-ts">scroll.destroy(): void
-</code></pre><p>Очистка событий, таймеров, классов и атрибутов</p><h3 id="-4">События</h3><h4 id="scrollend">scrollEnd</h4><p>Остановка скрола и прекращение всех действий по расчету позиций</p><h4 id="changedirectiony">changeDirectionY</h4><p>Изменение направления скрола по оси Y</p><h4 id="changedirectionx">changeDirectionX</h4><p>Изменение направления скрола по оси X</p></main></body></html>
+</code></pre><h4 id="onlyscrollbarstop">OnlyScrollbar.stop</h4><pre><code class="ts language-ts">scroll.stop(): void
+</code></pre><p>Останавливает анимацию скрола на текущей позиции</p><pre><code>#### OnlyScrollbar.lock
+</code></pre><p>ts scroll.lock(): void</p><pre><code>Блокирует скрол
+
+Блокировка также прервет запущенные процессы по перерасчету позиции
+
+#### OnlyScrollbar.unlock
+</code></pre><p>ts scroll.unlock(): void</p><pre><code>Разблокирует скрол.
+
+Запускает перерасчет позиции скрола
+
+#### OnlyScrollbar.addEventListener
+</code></pre><p>ts scroll.addEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler, options: AddEventListenerOptions): void</p><pre><code>| argument | type | description |
+| :------: | :--: | :---------- |
+| `type` | `OnlyScrollbarEvents` | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
+| `eventHandler` | `EventHandler` | Функция обработчик события |
+| `options` | `AddEventListenerOptions` | Параметры обработчика события |
+
+Добавляет обработчик события на eventContainer
+</code></pre><p>ts const scrollEndHandler = () =&gt; { /* … */ } scroll.addEventListener('scrollEnd', scrollEndHandler, { once: true });</p><pre><code>#### OnlyScrollbar.removeEventListener
+</code></pre><p>ts scroll.removeEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler): void</p><pre><code>| argument | type | description |
+| :------: | :--: | :---------- |
+| `type` | `OnlyScrollbarEvents` | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
+| `eventHandler` | `EventHandler` | Функция обработчик события |
+
+Удаляет существующий обработчик события на eventContainer
+</code></pre><p>ts const scrollEndHandler = () =&gt; { /* … */ } scroll.removeEventListener('scrollEnd', scrollEndHandler);</p><pre><code>#### OnlyScrollbar.destroy
+</code></pre><p>ts scroll.destroy(): void ```</p><p>Очистка событий, таймеров, классов и атрибутов</p><h3 id="-4">События</h3><h4 id="scrollend">scrollEnd</h4><p>Остановка скрола и прекращение всех действий по расчету позиций</p><h4 id="changedirectiony">changeDirectionY</h4><p>Изменение направления скрола по оси Y</p><h4 id="changedirectionx">changeDirectionX</h4><p>Изменение направления скрола по оси X</p></main></body></html>
