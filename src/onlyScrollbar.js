@@ -80,7 +80,7 @@ class OnlyScrollbar {
 
     sync() {
         this.syncPos();
-        this.rafID = null
+        this.rafID = null;
     }
 
     scrollTo({ x, y }) {
@@ -199,13 +199,15 @@ class OnlyScrollbar {
     }
 
     syncPos() {
-        requestAnimationFrame(() => {
-            const currentPosition = { y: this.scrollContainer.scrollTop, x: this.scrollContainer.scrollLeft }
-            this.easedPosition = currentPosition;
-            this.targetPosition = currentPosition;
-            this.lastPosition = currentPosition;
-            this.position = currentPosition;
-        });
+        const currentPosition = { y: this.scrollContainer.scrollTop, x: this.scrollContainer.scrollLeft };
+        this.easedPosition = currentPosition;
+        this.targetPosition = currentPosition;
+        this.lastPosition = currentPosition;
+        this.position = currentPosition;
+    }
+
+    stop() {
+        cancelAnimationFrame(this.rafID);
     }
 
     checkSyncTo() {

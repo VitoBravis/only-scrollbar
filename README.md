@@ -72,6 +72,7 @@ scroll.destroy();
     - [OnlyScrollbar.sync](#OnlyScrollbarsync)
     - [OnlyScrollbar.scrollTo](#OnlyScrollbarscrollTo)
     - [OnlyScrollbar.setValue](#OnlyScrollbarsetValue)
+    - [OnlyScrollbar.stop](#OnlyScrollbarstop)
     - [OnlyScrollbar.lock](#OnlyScrollbarlock)
     - [OnlyScrollbar.unlock](#OnlyScrollbarunlock)
     - [OnlyScrollbar.addEventListener](#OnlyScrollbaraddEventListener)
@@ -196,6 +197,14 @@ Example:
 ```ts
 scroll.setValue({x: 0, y: document.querySelector('#anchor').offsetTop});
 ```
+
+#### OnlyScrollbar.stop
+
+```ts
+scroll.stop(): void
+```
+
+Останавливает анимацию скрола на текущей позиции
 
 #### OnlyScrollbar.lock
 
