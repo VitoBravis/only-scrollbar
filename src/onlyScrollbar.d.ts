@@ -27,6 +27,8 @@ export interface OnlyScrollbarOptions {
      * @description Доступные направления скрола
      */
     mode?: OnlyScrollbarModes;
+
+    directionAttribute?: boolean;
 }
 export interface Delta2D {
     x: number;
@@ -61,6 +63,7 @@ declare class OnlyScrollbar {
     private easedPosition: Delta2D;
     private lastPosition: Delta2D;
     readonly mode: OnlyScrollbarModes;
+    readonly directionAttribute: boolean;
     readonly damping: number;
     private syncTo;
     private rafID: number | null;
