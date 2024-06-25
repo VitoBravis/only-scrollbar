@@ -22,6 +22,7 @@ class OnlyScrollbar {
     isDisable;
     setTargetPosition;
     tick;
+    directionAttribute;
 
     constructor(element, options) {
         const _scrollContainer =  findElementBySelector(element);
@@ -42,6 +43,7 @@ class OnlyScrollbar {
         this.rafID = null
         this.damping = (options?.damping ?? DEFAULT_OPTIONS.damping) * 0.1;
         this.mode = options?.mode ?? DEFAULT_OPTIONS.mode;
+        this.directionAttribute = options?.directionAttribute ?? DEFAULT_OPTIONS.directionAttribute;
         this.lastHash = window.location.hash;
         this.isDisable = false;
 
@@ -68,11 +70,15 @@ class OnlyScrollbar {
         }
         const {x, y} = this.direction;
         if (x !== this.lastDirection?.x) {
-            this.scrollContainer.dataset.scrollDirectionX = x !== 1 ? "left" : "right";
+            if (this.directionAttribute) {
+                this.scrollContainer.dataset.scrollDirectionX = x !== 1 ? "left" : "right";
+            }
             emit(this.eventContainer, "changeDirectionX")
         }
         if (y !== this.lastDirection?.y) {
-            this.scrollContainer.dataset.scrollDirectionY = y !== 1 ? "up" : "down";
+            if (this.directionAttribute) {
+                this.scrollContainer.dataset.scrollDirectionY = y !== 1 ? "up" : "down";
+            }
             emit(this.eventContainer, "changeDirectionY")
         }
         this.lastDirection = {x, y};
@@ -153,8 +159,10 @@ class OnlyScrollbar {
     init() {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
-        this.scrollContainer.dataset.scrollDirectionY = 'up'
-        this.scrollContainer.dataset.scrollDirectionX = 'left'
+        if (this.directionAttribute) {
+            this.scrollContainer.dataset.scrollDirectionY = 'up'
+            this.scrollContainer.dataset.scrollDirectionX = 'left'
+        }
         this.scrollContainer.classList.add(OnlyScrollbar.classNames.container);
 
         this.initEvents();

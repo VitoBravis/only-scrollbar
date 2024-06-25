@@ -2,7 +2,8 @@ import {wheelCalculate} from "./utils.js";
 
 const DEFAULT_OPTIONS = {
     damping: 1,
-    mode: "vertical"
+    mode: "vertical",
+    directionAttribute: true
 }
 
 /**
