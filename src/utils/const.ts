@@ -1,16 +1,19 @@
-import {wheelCalculate} from "./utils.js";
+// @ts-nocheck
+import {wheelCalculate} from "./utils";
+import OnlyScrollbar from "../onlyScrollbar";
+import {Delta2D, IOnlyScrollbar, OnlyScrollbarModes, OnlyScrollbarOptions} from "../types";
 
-const DEFAULT_OPTIONS = {
+export const DEFAULT_OPTIONS: Required<Omit<OnlyScrollbarOptions, 'eventContainer'>> = {
     damping: 1,
-    mode: "vertical"
+    speed: 1,
+    mode: "vertical",
 }
 
-/**
- *
- * @type Object
- */
-const TICK_BY_MODE = {
-    vertical: function() {
+// Погрешность для границ скрол-контейнера
+const MARGIN_ERROR = 3;
+
+export const TICK_BY_MODE: Record<OnlyScrollbarModes, VoidFunction> = {
+    vertical: function(this: IOnlyScrollbar): void {
         this.easedPosition = {
             x: 0,
             y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
@@ -25,7 +28,7 @@ const TICK_BY_MODE = {
         this.lastPosition = this.easedPosition;
         this.rafID = requestAnimationFrame(this.tick);
     },
-    horizontal: function() {
+    horizontal: function(this: IOnlyScrollbar): void {
         this.easedPosition = {
             x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
             y: 0
@@ -40,7 +43,7 @@ const TICK_BY_MODE = {
         this.lastPosition = this.easedPosition;
         this.rafID = requestAnimationFrame(this.tick);
     },
-    free: function() {
+    free: function(this: IOnlyScrollbar): void {
         this.easedPosition = {
             x: +((1 - this.damping) * this.easedPosition.x + this.damping * this.targetPosition.x).toFixed(2),
             y: +((1 - this.damping) * this.easedPosition.y + this.damping * this.targetPosition.y).toFixed(2)
@@ -57,32 +60,27 @@ const TICK_BY_MODE = {
         this.rafID = requestAnimationFrame(this.tick);
     },
 }
-/**
- *
- * @type Object
- */
-const WHEEL_BY_MODE = {
-    vertical: function(e) {
-        const { y } = wheelCalculate(e);
+
+export const WHEEL_BY_MODE: Record<OnlyScrollbarModes, (e: WheelEvent) => void> = {
+    vertical: function(this: IOnlyScrollbar, e) {
+        const { y } = wheelCalculate(e, this.speed);
         this.targetPosition = {
             x: 0,
-            y: Math.max(Math.min( this.targetPosition.y + y, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
+            y: Math.max(Math.min(this.targetPosition.y + y, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight + MARGIN_ERROR), -MARGIN_ERROR)
         };
     },
-    horizontal: function(e) {
-        const { x } = wheelCalculate(e);
+    horizontal: function(this: IOnlyScrollbar, e) {
+        const { x } = wheelCalculate(e, this.speed);
         this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + x, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
+            x: Math.max(Math.min(this.targetPosition.x + x, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth + MARGIN_ERROR), -MARGIN_ERROR),
             y: 0
         }
     },
-    free: function(e) {
-        const { x, y } = wheelCalculate(e);
+    free: function(this: IOnlyScrollbar, e) {
+        const { x, y } = wheelCalculate(e, this.speed);
         this.targetPosition = {
-            x: Math.max(Math.min( this.targetPosition.x + x, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth), 0),
-            y: Math.max(Math.min( this.targetPosition.y + y, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight), 0)
+            x: Math.max(Math.min(this.targetPosition.x + x, this.scrollContainer.scrollWidth - this.scrollContainer.clientWidth + MARGIN_ERROR), -MARGIN_ERROR),
+            y: Math.max(Math.min(this.targetPosition.y + y, this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight + MARGIN_ERROR), -MARGIN_ERROR)
         };
     }
 }
-
-export { WHEEL_BY_MODE, TICK_BY_MODE, DEFAULT_OPTIONS, wheelCalculate}

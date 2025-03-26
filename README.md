@@ -61,28 +61,28 @@ scroll.destroy();
 ```
 
 - Свойства
-    - [OnlyScrollbar.classNames](#OnlyScrollbarclassNames)
-    - [OnlyScrollbar.scrollContainer](#OnlyScrollbarscrollContainer)
-    - [OnlyScrollbar.eventContainer](#OnlyScrollbareventContainer)
-    - [OnlyScrollbar.isLocked](#OnlyScrollbarisLocked)
-    - [OnlyScrollbar.direction](#OnlyScrollbardirection)
-    - [OnlyScrollbar.position](#OnlyScrollbarposition)
+    - [OnlyScrollbar.classNames](#onlyscrollbarclassnames)
+    - [OnlyScrollbar.scrollContainer](#onlyscrollbarscrollcontainer)
+    - [OnlyScrollbar.eventContainer](#onlyscrollbareventcontainer)
+    - [OnlyScrollbar.isLocked](#onlyscrollbarislocked)
+    - [OnlyScrollbar.direction](#onlyscrollbardirection)
+    - [OnlyScrollbar.position](#onlyscrollbarposition)
 
 - Методы
-    - [OnlyScrollbar.sync](#OnlyScrollbarsync)
-    - [OnlyScrollbar.scrollTo](#OnlyScrollbarscrollTo)
-    - [OnlyScrollbar.setValue](#OnlyScrollbarsetValue)
-    - [OnlyScrollbar.stop](#OnlyScrollbarstop)
-    - [OnlyScrollbar.lock](#OnlyScrollbarlock)
-    - [OnlyScrollbar.unlock](#OnlyScrollbarunlock)
-    - [OnlyScrollbar.addEventListener](#OnlyScrollbaraddEventListener)
-    - [OnlyScrollbar.removeEventListener](#OnlyScrollbarremoveEventListener)
-    - [OnlyScrollbar.destroy](#OnlyScrollbardestroy)
+    - [OnlyScrollbar.sync](#onlyscrollbarsync)
+    - [OnlyScrollbar.scrollTo](#onlyscrollbarscrollto)
+    - [OnlyScrollbar.setValue](#onlyscrollbarsetvalue)
+    - [OnlyScrollbar.stop](#onlyscrollbarstop)
+    - [OnlyScrollbar.lock](#onlyscrollbarlock)
+    - [OnlyScrollbar.unlock](#onlyscrollbarunlock)
+    - [OnlyScrollbar.addEventListener](#onlyscrollbaraddeventlistener)
+    - [OnlyScrollbar.removeEventListener](#onlyscrollbarremoveeventlistener)
+    - [OnlyScrollbar.destroy](#onlyscrollbardestroy)
     
 - События
-    - [scrollEnd](#scrollEnd)
-    - [changeDirectionY](#changeDirectionY)
-    - [changeDirectionX](#changeDirectionX)
+    - [scrollEnd](#scrollend)
+    - [changeDirectionY](#changedirectiony)
+    - [changeDirectionX](#changedirectionx)
 
 ### Свойства
 

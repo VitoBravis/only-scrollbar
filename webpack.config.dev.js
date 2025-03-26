@@ -4,7 +4,10 @@ const path = require('path');
 
 module.exports = {
     mode: "development",
-    entry: "./dev/common.js",
+    entry: "./dev/common.ts",
+    resolve: {
+        extensions: [ '.ts', '.js' ]
+    },
     output: {
         path: path.join(__dirname, 'build'),
         filename: 'dev.js'
@@ -25,6 +28,10 @@ module.exports = {
             {
                 test: /\.css$/i,
                 use: [MiniCssExtractPlugin.loader, "css-loader"],
+            },
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
             },
         ],
     },
