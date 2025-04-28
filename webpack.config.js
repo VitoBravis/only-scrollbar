@@ -4,7 +4,10 @@ const path = require('path');
 
 module.exports = {
     mode: "production",
-    entry: "./src/onlyScrollbar",
+    entry: "./src/onlyScrollbar.ts",
+    resolve: {
+        extensions: [ '.ts', '.js' ]
+    },
     output: {
         path: path.join(__dirname, 'dist'),
         filename: 'onlyScrollbar.js',
@@ -14,6 +17,14 @@ module.exports = {
             name: "OnlyScroll",
             export: "default"
         },
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+            },
+        ],
     },
     optimization: {
         minimize: true,

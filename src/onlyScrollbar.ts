@@ -1,12 +1,11 @@
-import {emit, findElementBySelector} from "./utils/utils";
-import {DEFAULT_OPTIONS, TICK_BY_MODE, WHEEL_BY_MODE} from "./utils/const";
+import {emit, findElementBySelector, getFieldsByAxis} from "./utils/utils";
+import {DEFAULT_OPTIONS, IS_TOUCH_DEVICE, MARGIN_ERROR} from "./utils/const";
 import {
+    Attributes,
     ClassNames,
-    Delta2D,
     Direction,
-    ElementOrSelector,
+    ElementOrSelector, InternalFields,
     OnlyScrollbarEvents,
-    OnlyScrollbarModes,
     OnlyScrollbarOptions
 } from "./types";
 
@@ -18,10 +17,9 @@ import {
  *      + speed {number} - множитель для значения wheelDelta (default: 1)
  *      - listenAxis {"x" | "y"} - Определяет какое направление колесика будет прослушиваться. По умолчанию совпадает с direction
  *      - scrollAnchors { object } - Включает/выключает обработку стандартных якорей-ссылок
- *      - Метод scrollIntoView
+ *      + Метод scrollIntoView
  *      - блокировка вложенных скролов (подумать)
  *      - overscroll { boolean } - Функционал подобный нативному overscrollBehavior. Пока не понятно как сделать (default: false)
- *      - easing { string } - Стандартные значения для функций Безье
  *      - Система модулей (?) - Возможность инициализировать отдельный модуль. Например, debug-модуль
  *  - Все параметры хранить в поле options
  */
@@ -32,10 +30,14 @@ class OnlyScrollbar {
     /**
      * @description Объект со всеми css-классами, которые используются в скроле
      */
-    static readonly ClassNames: ClassNames = {
-        container: 'only-scroll-container',
-        lock: 'only-scroll--is-locked',
+    static ClassNames: ClassNames = {
+        container: 'os-container',
+        lock: 'os--is-locked',
     };
+    static Attributes: Attributes = {
+        anchor: 'data-os-anchor',
+        direction: 'data-os-direction'
+    }
     /**
      * @description HTML-элемент, который будет являться контейнером для скрола
      * @description Для корректной работы размеры контейнера должны быть ограничены
@@ -46,25 +48,22 @@ class OnlyScrollbar {
      * @default OnlyScrollbar.scrollContainer
      */
     public readonly eventContainer: HTMLElement | Window;
-    public readonly mode: OnlyScrollbarModes;
-    public readonly damping: number;
-    public readonly speed: number;
+    public readonly options: Required<OnlyScrollbarOptions>;
     /**
      * @description Состояние, отображающее блокировку скрола
      */
     public isLocked: boolean;
-    public position: Delta2D;
-    protected readonly setTargetPosition: (e: WheelEvent) => void;
-    private readonly tick: FrameRequestCallback;
-    private targetPosition: Delta2D;
-    private easedPosition: Delta2D;
-    private lastPosition: Delta2D;
+    public position: number;
+    public isStart: boolean;
+    public isEnd: boolean;
+    private targetPosition: number;
+    private lastPosition: number;
     private syncTo?: NodeJS.Timeout;
     private rafID: number | null;
     private lastDirection: Direction | null;
-    private isDisable: boolean;
+    private fields: InternalFields;
 
-    constructor(element: ElementOrSelector | null | undefined, options?: OnlyScrollbarOptions) {
+    constructor(element: ElementOrSelector | null | undefined, options: OnlyScrollbarOptions = DEFAULT_OPTIONS) {
         const _scrollContainer = findElementBySelector(element);
 
         if (!_scrollContainer) throw new Error('scrollElement does not exist');
@@ -74,65 +73,44 @@ class OnlyScrollbar {
         const _eventContainer = findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
         this.eventContainer = _eventContainer === document.scrollingElement ? window : _eventContainer;
 
-        this.position = { x: 0, y: 0 };
-        this.targetPosition = { x: 0, y: 0 }
-        this.easedPosition = { x: 0, y: 0 }
-        this.lastPosition = { x: 0, y: 0 }
+        this.position = 0;
+        this.targetPosition = 0;
+        this.lastPosition = 0;
         this.lastDirection = null;
         this.isLocked = false;
+        this.isEnd = false;
+        this.isStart = true;
         this.rafID = null
-        this.damping = (options?.damping ?? DEFAULT_OPTIONS.damping) * 0.1;
-        this.mode = options?.mode ?? DEFAULT_OPTIONS.mode;
-        this.speed = options?.speed ?? DEFAULT_OPTIONS.speed;
-        this.isDisable = false;
-
-        this.setTargetPosition = WHEEL_BY_MODE[this.mode].bind(this);
-        this.tick = TICK_BY_MODE[this.mode].bind(this);
+        this.options = {
+            anchors: {...DEFAULT_OPTIONS.anchors, ...(options.anchors ?? {})},
+            speed: options?.speed ?? DEFAULT_OPTIONS.speed,
+            eventContainer: this.eventContainer,
+            axis: options?.axis ?? DEFAULT_OPTIONS.axis,
+            listenAxis: options?.listenAxis ?? options?.axis ?? DEFAULT_OPTIONS.listenAxis,
+            damping: (options?.damping ?? DEFAULT_OPTIONS.damping) * 0.1
+        }
+        this.fields = getFieldsByAxis(this.options.axis, this.options.listenAxis);
 
         this.init();
     }
     /**
      * @description Последнее направление скрола в числовом представлении
-     * @description 1 = Down|Right, -1 = Up|Left
+     * @description 1 = Forward, -1 = Back
      */
     public get direction(): Direction {
-        const Y = Math.sign(this.position.y - this.lastPosition.y);
-        const X = Math.sign(this.position.x - this.lastPosition.x);
-        return <Direction>{
-            y: Y !== 0 ? Y : this.lastDirection?.y ?? -1,
-            x: X !== 0 ? X : this.lastDirection?.x ?? -1
-        }
+        return <Direction>(Math.sign(this.position - this.lastPosition) || this.lastDirection || -1);
     }
 
     /**
-     * @description Обновление направления скрола. Также устанавливает на scrollContainer атрибут data-scroll-direction со значениями "up" | "down"
+     * @description Обновление направления скрола. Также устанавливает на scrollContainer атрибут data-os-direction
      * @description Вызывается автоматически на скрол, но можно вызывать вручную на случай непредвиденных ошибок
      */
     public updateDirection(): void {
-        this.lastPosition = this.position
-        this.position = {
-            x: this.scrollContainer.scrollLeft,
-            y: this.scrollContainer.scrollTop
+        const direction = this.direction;
+        if (direction !== this.lastDirection) {
+            this.scrollContainer.setAttribute(OnlyScrollbar.Attributes.direction, direction > 0 ? 'forward' : 'back');
+            emit(this.eventContainer, "changeDirection");
         }
-        const {x, y} = this.direction;
-        if (x !== this.lastDirection?.x) {
-            this.scrollContainer.dataset.scrollDirectionX = x !== 1 ? "left" : "right";
-            emit(this.eventContainer, "changeDirectionX")
-        }
-        if (y !== this.lastDirection?.y) {
-            this.scrollContainer.dataset.scrollDirectionY = y !== 1 ? "up" : "down";
-            emit(this.eventContainer, "changeDirectionY")
-        }
-        this.lastDirection = {x, y};
-    }
-
-    /**
-     * @description Синхронизация всех значений, которые используются для расчета позиций
-     * @description Вызывается автоматически по окончанию событий скрола, но можно вызвать вручную для преждевременной синхронизации и обнуления анимации
-     */
-    public sync(): void {
-        this.syncPos();
-        this.rafID = null;
     }
 
     /**
@@ -141,39 +119,43 @@ class OnlyScrollbar {
     public stop(): void {
         if (typeof this.rafID === "number") {
             cancelAnimationFrame(this.rafID);
+            this.rafID = null;
         }
+        emit(this.eventContainer, 'scrollEnd');
+        this.checkEdges();
     }
 
     /**
      * @description Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений
-     * @param positionY {number} - Числовое значение целевой позиции скрола
+     * @param position
      */
-    public scrollTo({ x, y }: Partial<Delta2D>): void {
-        if (y === this.position.y && x === this.position.x) return;
+    public scrollTo(position: number): void {
+        if (position === this.position) return;
+        this.stop();
 
-        if (!!navigator.maxTouchPoints) {
+        if (IS_TOUCH_DEVICE) {
             this.scrollContainer.scrollTo({
-                left: x,
-                top: y,
+                [this.fields.offset]: position,
                 behavior: "smooth"
-            })
+            });
             return;
         }
 
-        this.targetPosition = {
-            x: x ?? this.position.x,
-            y: y ?? this.position.y
-        }
+        this.targetPosition = position;
         this.rafID = requestAnimationFrame(this.tick);
+    }
+
+    public scrollIntoView(element: HTMLElement, offset: number = 0): void {
+        const targetPosition = this.position + element.getBoundingClientRect()[this.fields.offset] - offset!;
+        this.scrollTo(targetPosition);
     }
 
     /**
      * @description Установка конкретного значения скрол позиции, без применения каких-либо анимаций
      * @param value {number} - Числовое значение целевой позиции скрола
      */
-    public setValue({ x, y }: Partial<Delta2D>): void {
-        this.scrollContainer.scrollTop = y ?? this.position.y;
-        this.scrollContainer.scrollLeft = x ?? this.position.x;
+    public setValue(value: number): void {
+        this.scrollContainer[this.fields.scrollOffset] = value;
     }
 
     /**
@@ -187,7 +169,7 @@ class OnlyScrollbar {
         this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.lock);
         this.removeEventListener("wheel", this.onWheel);
         this.isLocked = true;
-        this.sync();
+        this.stop();
     }
 
     /**
@@ -219,8 +201,7 @@ class OnlyScrollbar {
         this.rafID = null;
         this.scrollContainer.style.removeProperty('overflow');
         this.scrollContainer.classList.remove(...Object.values(OnlyScrollbar.ClassNames));
-        this.scrollContainer.removeAttribute('data-scroll-direction-x');
-        this.scrollContainer.removeAttribute('data-scroll-direction-y');
+        this.scrollContainer.removeAttribute(OnlyScrollbar.Attributes.direction);
 
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.removeEventListener("scroll", this.onScroll);
@@ -230,8 +211,7 @@ class OnlyScrollbar {
     private init(): void {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
-        this.scrollContainer.dataset.scrollDirectionY = 'up'
-        this.scrollContainer.dataset.scrollDirectionX = 'left'
+        this.scrollContainer.setAttribute(OnlyScrollbar.Attributes.direction, 'back');
         this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.container);
 
         this.initEvents();
@@ -241,15 +221,23 @@ class OnlyScrollbar {
     private initEvents(): void {
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.addEventListener("scroll", this.onScroll, { passive: true });
+        scrollingElement.addEventListener("click", this.onClick);
         this.addEventListener("wheel", this.onWheel, { passive: false });
     }
 
+    private onClick = (e: Event): void => {
+        /**
+         * @todo: Проверка EventTarget на ссылку и наличе хэша. Перехват стандартного поведения браузера
+         */
+    }
+
     private onScroll = (e: Event): void => {
-        if (this.isLocked || this.isDisable) return;
+        if (this.isLocked) return;
+
+        this.isStart = false;
+        this.isEnd = false;
 
         this.updateDirection();
-
-        this.checkSyncTo();
     }
 
     private onWheel = (e: Event) => {
@@ -260,50 +248,82 @@ class OnlyScrollbar {
 
         if (this.isLocked) return;
 
-        this.manageParentScrollbars(<HTMLElement>e.target);
-
-        if (this.isDisable) return;
-
         // @ts-ignore
         this.setTargetPosition(e);
+
+        this.overscrollPropagation(e);
 
         if (this.rafID === null) {
             this.rafID = requestAnimationFrame(this.tick);
         }
     }
 
-    private syncPos(): void {
-        const currentPosition = { y: this.scrollContainer.scrollTop, x: this.scrollContainer.scrollLeft };
-        this.easedPosition = currentPosition;
+    private overscrollPropagation(e: Event): void {
+        if (this.isStart && this.targetPosition < this.position) return;
+        if (this.isEnd && this.targetPosition > this.position) return;
+        e.stopPropagation();
+    }
+
+    private wheelCalculate(wheelEvent: WheelEvent, speed: number): number {
+        let delta = wheelEvent[this.fields.delta];
+
+        if (wheelEvent.deltaMode) {
+            const deltaMultiply = wheelEvent.deltaMode === 1 ? 40 : 800;
+            delta *= deltaMultiply;
+        }
+
+        delta *= speed;
+
+        return delta
+    }
+
+    private setTargetPosition(e: WheelEvent): void {
+        const distance = this.wheelCalculate(e, this.options.speed);
+        this.targetPosition = Math.max(Math.min(this.targetPosition + distance, this.scrollContainer[this.fields.scrollSize] - this.scrollContainer[this.fields.clientSize] + MARGIN_ERROR), -MARGIN_ERROR)
+    }
+
+    private tick = (): void => {
+        const position = +(this.position + this.options.damping * (this.targetPosition - this.position)).toFixed(2);
+        this.lastPosition = this.position;
+
+        if (this.lastPosition === position) {
+            this.stop();
+            return;
+        }
+
+        this.position = position;
+        this.setValue(position);
+        this.rafID = requestAnimationFrame(this.tick);
+    }
+
+    private sync(): void {
+        const currentPosition = this.scrollContainer[this.fields.scrollOffset];
         this.targetPosition = currentPosition;
         this.lastPosition = currentPosition;
         this.position = currentPosition;
     }
 
-    private checkSyncTo(): void {
-        if (this.syncTo) clearTimeout(this.syncTo);
-        this.syncTo = setTimeout(() => {
-            emit(this.eventContainer, "scrollEnd");
-            this.sync();
-        }, 200);
-    }
+    private checkEdges(): void {
+        if (this.isEnd || this.isStart) return;
 
-    private manageParentScrollbars(currentTarget: HTMLElement): void {
-        if (currentTarget.closest(`.${OnlyScrollbar.ClassNames.container}`)?.isSameNode(this.scrollContainer)) {
-            this.isDisable && this.enable();
-        } else  {
-            !this.isDisable && this.disable();
+        const {
+            [this.fields.scrollOffset]: scrollOffset,
+            [this.fields.clientSize]: clientSize,
+            [this.fields.scrollSize]: scrollSize,
+        } = this.scrollContainer
+
+        const isStart = scrollOffset === 0;
+        if (isStart) {
+            this.isStart = isStart;
+            emit(this.eventContainer, 'reachStart');
+            return;
         }
-    }
 
-    private disable(): void {
-        this.isDisable = true;
-        this.sync();
-    }
-
-    private enable(): void {
-        this.isDisable = false;
-        this.sync();
+        const isEnd = scrollSize - clientSize === scrollOffset;
+        if (isEnd) {
+            this.isEnd = isEnd;
+            emit(this.eventContainer, 'reachEnd');
+        }
     }
 }
 

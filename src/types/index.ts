@@ -1,17 +1,30 @@
 export declare type ElementOrSelector = HTMLElement | Window | string;
 export declare type ClassNamesKeys = 'container' | 'lock';
 export declare type ClassNames = Record<ClassNamesKeys, string>;
+export declare type AttributesKeys = 'direction' | 'anchor';
+export declare type Attributes = Record<AttributesKeys, string>;
 /**
  * @description Направление скрола
  * @description 1 = Down|Right, -1 = Up|Left
  */
-export declare type Direction = Record<keyof Delta2D, -1 | 1>;
+export declare type Direction = -1 | 1;
 /**
  * @description Функция-обработчик для события скрола
  */
 export declare type EventHandler = (e: Event) => void;
-export declare type OnlyScrollbarEvents = 'scrollEnd' | 'changeDirectionY' | 'changeDirectionX';
-export declare type OnlyScrollbarModes = 'vertical' | 'horizontal' | 'free';
+export declare type OnlyScrollbarEvents = 'scrollEnd' | 'changeDirection' | 'reachStart' | 'reachEnd';
+export declare type Axis = 'Y' | 'X';
+export declare type InternalFields = {
+    scrollOffset: 'scrollTop' | 'scrollLeft';
+    scrollSize: 'scrollHeight' | 'scrollWidth';
+    clientSize: 'clientHeight' | 'clientWidth';
+    offset: 'top' | 'left';
+    delta: 'deltaY' | 'deltaX';
+}
+export declare type AnchorsOptions = {
+    offset: number;
+    stopPropagation: boolean;
+}
 export interface OnlyScrollbarOptions {
     /**
      * @description Сила инерции в формате числа от 0 до 1
@@ -28,38 +41,28 @@ export interface OnlyScrollbarOptions {
      * @default 1
      */
     speed?: number;
-    scrollAnchors?: {
-        type: 'native' | 'custom';
-        options?: {
-            attribute?: string;
-            offset?: number;
-            stopPropagation?: boolean;
-        }
-    }
+    anchors?: Partial<AnchorsOptions>;
+    listenAxis?: Axis;
     /**
      * @description Доступные направления скрола
      */
-    mode?: OnlyScrollbarModes;
-}
-export interface Delta2D {
-    x: number;
-    y: number;
+    axis?: Axis;
 }
 
 export interface IOnlyScrollbar {
     readonly scrollContainer: HTMLElement;
     readonly eventContainer: HTMLElement | Window;
-    readonly mode: OnlyScrollbarModes;
+    readonly axis: Axis;
     readonly damping: number;
     readonly speed: number;
     readonly setTargetPosition: (e: WheelEvent) => void;
     readonly tick: FrameRequestCallback;
     readonly direction: Direction;
     isLocked: boolean;
-    position: Delta2D;
-    targetPosition: Delta2D;
-    easedPosition: Delta2D;
-    lastPosition: Delta2D;
+    position: number;
+    targetPosition: number;
+    easedPosition: number;
+    lastPosition: number;
     syncTo?: NodeJS.Timeout;
     rafID: number | null;
     lastDirection: Direction | null;
@@ -68,8 +71,8 @@ export interface IOnlyScrollbar {
     updateDirection(): void;
     sync(): void;
     stop(): void;
-    scrollTo(position: Partial<Delta2D>): void;
-    setValue(position: Partial<Delta2D>): void;
+    scrollTo(position: Partial<number>): void;
+    setValue(position: Partial<number>): void;
     lock(): void;
     unlock(): void;
     addEventListener(type: OnlyScrollbarEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): void;
