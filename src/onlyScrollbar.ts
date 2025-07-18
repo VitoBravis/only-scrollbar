@@ -32,11 +32,13 @@ class OnlyScrollbar {
      */
     static ClassNames: ClassNames = {
         container: 'os-container',
-        lock: 'os--is-locked',
+        lock: 'os-container--locked',
+        back: 'os-container--back',
+        forward: 'os-container--forward',
+        scrolling: 'os-container--scrolling'
     };
     static Attributes: Attributes = {
-        anchor: 'data-os-anchor',
-        direction: 'data-os-direction'
+        anchor: 'data-os-anchor'
     }
     /**
      * @description HTML-элемент, который будет являться контейнером для скрола
@@ -56,7 +58,10 @@ class OnlyScrollbar {
     public position: number;
     public isStart: boolean;
     public isEnd: boolean;
+    public isScrolling: boolean;
     private targetPosition: number;
+    private firstTickTime: number;
+    private prevTickTime: number;
     private lastPosition: number;
     private syncTo?: NodeJS.Timeout;
     private rafID: number | null;
@@ -76,10 +81,13 @@ class OnlyScrollbar {
         this.position = 0;
         this.targetPosition = 0;
         this.lastPosition = 0;
+        this.firstTickTime = 0;
+        this.prevTickTime = 0;
         this.lastDirection = null;
         this.isLocked = false;
         this.isEnd = false;
         this.isStart = true;
+        this.isScrolling = false;
         this.rafID = null
         this.options = {
             anchors: {...DEFAULT_OPTIONS.anchors, ...(options.anchors ?? {})},
@@ -108,7 +116,8 @@ class OnlyScrollbar {
     public updateDirection(): void {
         const direction = this.direction;
         if (direction !== this.lastDirection) {
-            this.scrollContainer.setAttribute(OnlyScrollbar.Attributes.direction, direction > 0 ? 'forward' : 'back');
+            this.lastDirection = direction;
+            this.toggleDirectionClass();
             emit(this.eventContainer, "changeDirection");
         }
     }
@@ -121,6 +130,8 @@ class OnlyScrollbar {
             cancelAnimationFrame(this.rafID);
             this.rafID = null;
         }
+        this.isScrolling = false;
+        this.scrollContainer.classList.remove(OnlyScrollbar.ClassNames.scrolling);
         emit(this.eventContainer, 'scrollEnd');
         this.checkEdges();
     }
@@ -146,7 +157,7 @@ class OnlyScrollbar {
     }
 
     public scrollIntoView(element: HTMLElement, offset: number = 0): void {
-        const targetPosition = this.position + element.getBoundingClientRect()[this.fields.offset] - offset!;
+        const targetPosition = this.position + element.getBoundingClientRect()[this.fields.offset] - offset;
         this.scrollTo(targetPosition);
     }
 
@@ -197,11 +208,11 @@ class OnlyScrollbar {
     }
 
     public destroy(): void {
+        this.unlock();
         if (this.syncTo) clearTimeout(this.syncTo);
         this.rafID = null;
         this.scrollContainer.style.removeProperty('overflow');
         this.scrollContainer.classList.remove(...Object.values(OnlyScrollbar.ClassNames));
-        this.scrollContainer.removeAttribute(OnlyScrollbar.Attributes.direction);
 
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.removeEventListener("scroll", this.onScroll);
@@ -211,8 +222,7 @@ class OnlyScrollbar {
     private init(): void {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
-        this.scrollContainer.setAttribute(OnlyScrollbar.Attributes.direction, 'back');
-        this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.container);
+        this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.container, OnlyScrollbar.ClassNames.back);
 
         this.initEvents();
     }
@@ -259,8 +269,8 @@ class OnlyScrollbar {
     }
 
     private overscrollPropagation(e: Event): void {
-        if (this.isStart && this.targetPosition < this.position) return;
-        if (this.isEnd && this.targetPosition > this.position) return;
+        const scrollingOverEdges = (this.isStart && this.targetPosition < this.position) || (this.isEnd && this.targetPosition > this.position);
+        if (scrollingOverEdges) return;
         e.stopPropagation();
     }
 
@@ -282,7 +292,23 @@ class OnlyScrollbar {
         this.targetPosition = Math.max(Math.min(this.targetPosition + distance, this.scrollContainer[this.fields.scrollSize] - this.scrollContainer[this.fields.clientSize] + MARGIN_ERROR), -MARGIN_ERROR)
     }
 
-    private tick = (): void => {
+    private toggleDirectionClass(): void {
+        this.scrollContainer.classList.toggle(OnlyScrollbar.ClassNames.forward);
+        this.scrollContainer.classList.toggle(OnlyScrollbar.ClassNames.back);
+    }
+
+    private tick = (time: number): void => {
+        // Пропуск первого кадра для начала расчетов deltaTime между кадрами
+        if (!this.isScrolling) {
+            this.onFirstTick(time);
+            this.rafID = requestAnimationFrame(this.tick);
+            return;
+        }
+        const deltaTime = time - this.prevTickTime;
+        this.prevTickTime = time;
+        // @todo Добавит deltaTime в lerp формулу
+        console.log(deltaTime);
+
         const position = +(this.position + this.options.damping * (this.targetPosition - this.position)).toFixed(2);
         this.lastPosition = this.position;
 
@@ -294,6 +320,12 @@ class OnlyScrollbar {
         this.position = position;
         this.setValue(position);
         this.rafID = requestAnimationFrame(this.tick);
+    }
+
+    private onFirstTick(time: number): void {
+        this.prevTickTime = time;
+        this.isScrolling = true;
+        this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.scrolling);
     }
 
     private sync(): void {

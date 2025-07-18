@@ -1,7 +1,7 @@
 export declare type ElementOrSelector = HTMLElement | Window | string;
-export declare type ClassNamesKeys = 'container' | 'lock';
+export declare type ClassNamesKeys = 'container' | 'lock' | 'scrolling' | 'back' | 'forward';
 export declare type ClassNames = Record<ClassNamesKeys, string>;
-export declare type AttributesKeys = 'direction' | 'anchor';
+export declare type AttributesKeys = 'anchor';
 export declare type Attributes = Record<AttributesKeys, string>;
 /**
  * @description Направление скрола
@@ -30,14 +30,14 @@ export interface OnlyScrollbarOptions {
      * @description Сила инерции в формате числа от 0 до 1
      * @default 1
      */
-    damping?: number;
+    damping?: number
     /**
      * @description Контейнер, на который будут применяться события скрола
      * @default scrollContainer
      */
     eventContainer?: ElementOrSelector | Window;
     /**
-     * @description Модификатор для скорости колесика мыши
+     * @description Модификатор скорости для колесика мыши
      * @default 1
      */
     speed?: number;
@@ -45,6 +45,7 @@ export interface OnlyScrollbarOptions {
     listenAxis?: Axis;
     /**
      * @description Доступные направления скрола
+     * @default Y
      */
     axis?: Axis;
 }
