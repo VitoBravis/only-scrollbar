@@ -306,10 +306,14 @@ class OnlyScrollbar {
         }
         const deltaTime = time - this.prevTickTime;
         this.prevTickTime = time;
-        // @todo Добавит deltaTime в lerp формулу
-        console.log(deltaTime);
 
-        const position = +(this.position + this.options.damping * (this.targetPosition - this.position)).toFixed(2);
+        /**
+         * @description Frame Rate Independent Damping using Lerp
+         * @link https://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/
+         */
+        const currentDamping = 1 - Math.exp(-this.options.damping * 60 * deltaTime * 0.001);
+
+        const position = +(this.position + currentDamping * (this.targetPosition - this.position)).toFixed(2);
         this.lastPosition = this.position;
 
         if (this.lastPosition === position) {
