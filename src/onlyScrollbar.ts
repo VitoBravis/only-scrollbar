@@ -4,7 +4,9 @@ import {
     Attributes,
     ClassNames,
     Direction,
-    ElementOrSelector, InternalFields,
+    Events,
+    ElementOrSelector,
+    InternalFields,
     OnlyScrollbarEvents,
     OnlyScrollbarOptions
 } from "./types";
@@ -39,6 +41,15 @@ class OnlyScrollbar {
     };
     static Attributes: Attributes = {
         anchor: 'data-os-anchor'
+    };
+    static Events: Events = {
+        start: "os:start",
+        stop: "os:stop",
+        change: 'os:change',
+        reachEnd: 'os:reachEnd',
+        reachStart: 'os:reachStart',
+        lock: 'os:lock',
+        unlock: 'os:unlock'
     }
     /**
      * @description HTML-элемент, который будет являться контейнером для скрола
@@ -60,7 +71,6 @@ class OnlyScrollbar {
     public isEnd: boolean;
     public isScrolling: boolean;
     private targetPosition: number;
-    private firstTickTime: number;
     private prevTickTime: number;
     private lastPosition: number;
     private syncTo?: NodeJS.Timeout;
@@ -81,7 +91,6 @@ class OnlyScrollbar {
         this.position = 0;
         this.targetPosition = 0;
         this.lastPosition = 0;
-        this.firstTickTime = 0;
         this.prevTickTime = 0;
         this.lastDirection = null;
         this.isLocked = false;
@@ -98,6 +107,8 @@ class OnlyScrollbar {
             damping: (options?.damping ?? DEFAULT_OPTIONS.damping) * 0.1
         }
         this.fields = getFieldsByAxis(this.options.axis, this.options.listenAxis);
+
+        this.stop = this.stop.bind(this);
 
         this.init();
     }
@@ -118,7 +129,7 @@ class OnlyScrollbar {
         if (direction !== this.lastDirection) {
             this.lastDirection = direction;
             this.toggleDirectionClass();
-            emit(this.eventContainer, "changeDirection");
+            emit(this.eventContainer, OnlyScrollbar.Events.change);
         }
     }
 
@@ -126,13 +137,17 @@ class OnlyScrollbar {
      * Остановка анимации скрола на текущей позиции
      */
     public stop(): void {
+        this.sync();
+        if (this.syncTo) {
+            clearTimeout(this.syncTo);
+        }
         if (typeof this.rafID === "number") {
             cancelAnimationFrame(this.rafID);
             this.rafID = null;
         }
         this.isScrolling = false;
         this.scrollContainer.classList.remove(OnlyScrollbar.ClassNames.scrolling);
-        emit(this.eventContainer, 'scrollEnd');
+        emit(this.eventContainer, OnlyScrollbar.Events.stop);
         this.checkEdges();
     }
 
@@ -198,11 +213,11 @@ class OnlyScrollbar {
         }
     }
 
-    // @todo: Надо поправить типы для второго аргумента
+
     public addEventListener(type: OnlyScrollbarEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): void {
         this.eventContainer.addEventListener(type, listener, options);
     }
-    // @todo: Надо поправить типы для второго аргумента
+
     public removeEventListener(type: OnlyScrollbarEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject): void {
         this.eventContainer.removeEventListener(type, listener);
     }
@@ -247,6 +262,7 @@ class OnlyScrollbar {
         this.isStart = false;
         this.isEnd = false;
 
+        this.checkSyncTo();
         this.updateDirection();
     }
 
@@ -339,6 +355,13 @@ class OnlyScrollbar {
         this.position = currentPosition;
     }
 
+    private checkSyncTo() {
+        if (this.syncTo) {
+            clearTimeout(this.syncTo);
+        }
+        this.syncTo = setTimeout(this.stop, 200);
+    }
+
     private checkEdges(): void {
         if (this.isEnd || this.isStart) return;
 
@@ -351,14 +374,14 @@ class OnlyScrollbar {
         const isStart = scrollOffset === 0;
         if (isStart) {
             this.isStart = isStart;
-            emit(this.eventContainer, 'reachStart');
+            emit(this.eventContainer, OnlyScrollbar.Events.reachStart);
             return;
         }
 
         const isEnd = scrollSize - clientSize === scrollOffset;
         if (isEnd) {
             this.isEnd = isEnd;
-            emit(this.eventContainer, 'reachEnd');
+            emit(this.eventContainer, OnlyScrollbar.Events.reachEnd);
         }
     }
 }

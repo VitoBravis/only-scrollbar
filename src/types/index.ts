@@ -12,7 +12,8 @@ export declare type Direction = -1 | 1;
  * @description Функция-обработчик для события скрола
  */
 export declare type EventHandler = (e: Event) => void;
-export declare type OnlyScrollbarEvents = 'scrollEnd' | 'changeDirection' | 'reachStart' | 'reachEnd';
+export declare type OnlyScrollbarEvents = 'os:stop' | 'os:start' | 'os:change' | 'os:reachStart' | 'os:reachEnd' | 'os:lock' | 'os:unlock';
+export declare type Events = Record<string, OnlyScrollbarEvents>
 export declare type Axis = 'Y' | 'X';
 export declare type InternalFields = {
     scrollOffset: 'scrollTop' | 'scrollLeft';
