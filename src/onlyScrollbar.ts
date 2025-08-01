@@ -4,28 +4,11 @@ import {
     Attributes,
     ClassNames,
     Direction,
-    Events,
     ElementOrSelector,
     InternalFields,
     OnlyScrollbarEvents,
     OnlyScrollbarOptions
 } from "./types";
-
-/**
- * TODO:
- *  + Поменять JS на TS файлы
- *  - Сделать отдельную версию для React
- *  - Расширить параметры инициализации:
- *      + speed {number} - множитель для значения wheelDelta (default: 1)
- *      - listenAxis {"x" | "y"} - Определяет какое направление колесика будет прослушиваться. По умолчанию совпадает с direction
- *      - scrollAnchors { object } - Включает/выключает обработку стандартных якорей-ссылок
- *      + Метод scrollIntoView
- *      - блокировка вложенных скролов (подумать)
- *      - overscroll { boolean } - Функционал подобный нативному overscrollBehavior. Пока не понятно как сделать (default: false)
- *      - Система модулей (?) - Возможность инициализировать отдельный модуль. Например, debug-модуль
- *  - Все параметры хранить в поле options
- */
-
 
 
 class OnlyScrollbar {
@@ -40,9 +23,10 @@ class OnlyScrollbar {
         scrolling: 'os-container--scrolling'
     };
     static Attributes: Attributes = {
-        anchor: 'data-os-anchor'
+        anchor: 'data-os-anchor',
+        anchorId: 'data-os-anchor-id'
     };
-    static Events: Events = {
+    static Events = {
         start: "os:start",
         stop: "os:stop",
         change: 'os:change',
@@ -50,7 +34,7 @@ class OnlyScrollbar {
         reachStart: 'os:reachStart',
         lock: 'os:lock',
         unlock: 'os:unlock'
-    }
+    } as const
     /**
      * @description HTML-элемент, который будет являться контейнером для скрола
      * @description Для корректной работы размеры контейнера должны быть ограничены
@@ -99,7 +83,7 @@ class OnlyScrollbar {
         this.isScrolling = false;
         this.rafID = null
         this.options = {
-            anchors: {...DEFAULT_OPTIONS.anchors, ...(options.anchors ?? {})},
+            anchors: {...DEFAULT_OPTIONS.anchors, ...{root: this.scrollContainer}, ...(options.anchors ?? {})},
             speed: options?.speed ?? DEFAULT_OPTIONS.speed,
             eventContainer: this.eventContainer,
             axis: options?.axis ?? DEFAULT_OPTIONS.axis,
@@ -168,7 +152,7 @@ class OnlyScrollbar {
         }
 
         this.targetPosition = position;
-        this.rafID = requestAnimationFrame(this.tick);
+        requestAnimationFrame(this.onFirstTick);
     }
 
     public scrollIntoView(element: HTMLElement, offset: number = 0): void {
@@ -209,10 +193,9 @@ class OnlyScrollbar {
         this.addEventListener("wheel", this.onWheel, { passive: false });
         this.isLocked = false;
         if (this.rafID === null) {
-            this.rafID = requestAnimationFrame(this.tick);
+            requestAnimationFrame(this.onFirstTick);
         }
     }
-
 
     public addEventListener(type: OnlyScrollbarEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): void {
         this.eventContainer.addEventListener(type, listener, options);
@@ -238,6 +221,7 @@ class OnlyScrollbar {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
         this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.container, OnlyScrollbar.ClassNames.back);
+        this.sync();
 
         this.initEvents();
     }
@@ -246,14 +230,52 @@ class OnlyScrollbar {
     private initEvents(): void {
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.addEventListener("scroll", this.onScroll, { passive: true });
-        scrollingElement.addEventListener("click", this.onClick);
         this.addEventListener("wheel", this.onWheel, { passive: false });
+        if (this.options.anchors.active) {
+            const clickHandler = (this.options.anchors.type === 'native') ? this.handleNativeAnchors : this.handleCustomAnchors;
+            this.options.anchors.root!.addEventListener("click", clickHandler);
+        }
     }
 
-    private onClick = (e: Event): void => {
-        /**
-         * @todo: Проверка EventTarget на ссылку и наличе хэша. Перехват стандартного поведения браузера
-         */
+    private handleCustomAnchors = (e: Event) => {
+        const target = <HTMLElement>e.target;
+        const targetElement = target.closest(`[${OnlyScrollbar.Attributes.anchor}]`);
+        if (!targetElement) {
+            return;
+        }
+
+        const targetId = targetElement.getAttribute(OnlyScrollbar.Attributes.anchor);
+        const selector = `[${OnlyScrollbar.Attributes.anchorId}="${targetId}"]`;
+        const targetAnchor = this.options.anchors.root!.querySelector<HTMLElement>(selector);
+        if (!targetAnchor) {
+            return;
+        }
+
+        e.preventDefault();
+        if (this.options.anchors.stopPropagation) {
+            e.stopPropagation();
+        }
+
+        this.scrollIntoView(targetAnchor, this.options.anchors.offset);
+    }
+
+    private handleNativeAnchors = (e: Event): void => {
+        const target = <HTMLElement>e.target;
+        if (!(target instanceof HTMLAnchorElement)) {
+            return;
+        }
+
+        const targetAnchor = document.getElementById(target.hash.substring(1));
+        if (!targetAnchor) {
+            return;
+        }
+
+        e.preventDefault();
+        if (this.options.anchors.stopPropagation) {
+            e.stopPropagation();
+        }
+
+        this.scrollIntoView(targetAnchor, this.options.anchors.offset);
     }
 
     private onScroll = (e: Event): void => {
@@ -280,7 +302,7 @@ class OnlyScrollbar {
         this.overscrollPropagation(e);
 
         if (this.rafID === null) {
-            this.rafID = requestAnimationFrame(this.tick);
+            requestAnimationFrame(this.onFirstTick)
         }
     }
 
@@ -314,12 +336,6 @@ class OnlyScrollbar {
     }
 
     private tick = (time: number): void => {
-        // Пропуск первого кадра для начала расчетов deltaTime между кадрами
-        if (!this.isScrolling) {
-            this.onFirstTick(time);
-            this.rafID = requestAnimationFrame(this.tick);
-            return;
-        }
         const deltaTime = time - this.prevTickTime;
         this.prevTickTime = time;
 
@@ -342,10 +358,14 @@ class OnlyScrollbar {
         this.rafID = requestAnimationFrame(this.tick);
     }
 
-    private onFirstTick(time: number): void {
+    private onFirstTick = (time: number): void => {
         this.prevTickTime = time;
         this.isScrolling = true;
         this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.scrolling);
+        emit(this.eventContainer, OnlyScrollbar.Events.start)
+        if (this.rafID === null) {
+            this.rafID = requestAnimationFrame(this.tick);
+        }
     }
 
     private sync(): void {

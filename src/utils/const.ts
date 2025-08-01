@@ -8,7 +8,9 @@ export const DEFAULT_OPTIONS: Required<Omit<OnlyScrollbarOptions, 'eventContaine
     listenAxis: "Y",
     anchors: {
         offset: 0,
-        stopPropagation: false
+        stopPropagation: false,
+        active: true,
+        type: 'native'
     }
 }
 

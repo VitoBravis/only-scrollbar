@@ -1,7 +1,7 @@
 export declare type ElementOrSelector = HTMLElement | Window | string;
 export declare type ClassNamesKeys = 'container' | 'lock' | 'scrolling' | 'back' | 'forward';
 export declare type ClassNames = Record<ClassNamesKeys, string>;
-export declare type AttributesKeys = 'anchor';
+export declare type AttributesKeys = 'anchor' | 'anchorId';
 export declare type Attributes = Record<AttributesKeys, string>;
 /**
  * @description Направление скрола
@@ -25,6 +25,9 @@ export declare type InternalFields = {
 export declare type AnchorsOptions = {
     offset: number;
     stopPropagation: boolean;
+    active: boolean;
+    root: HTMLElement;
+    type: 'native' | 'custom';
 }
 export interface OnlyScrollbarOptions {
     /**
