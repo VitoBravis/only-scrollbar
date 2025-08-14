@@ -37,7 +37,8 @@ module.exports = {
             patterns: [
                 {
                     from: path.join(__dirname, 'src', 'onlyScrollbar.d.ts'),
-                    to: path.join(__dirname, 'dist', 'onlyScrollbar.d.ts')
+                    to: path.join(__dirname, 'dist', 'onlyScrollbar.d.ts'),
+                    noErrorOnMissing: true,
                 },
             ],
         }),

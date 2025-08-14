@@ -5,8 +5,10 @@
         "allowJs": true,
         "declaration": true,
         "outDir": "./dist",
+        "noEmit": false,
         "strict": true,
-        "declarationMap": true
+        "declarationMap": false
     },
+    "include": ["src"],
     "exclude": ["node_modules"]
 }

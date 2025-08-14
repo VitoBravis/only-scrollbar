@@ -6,9 +6,6 @@
 /demo
 /docs
 
-# development
-/dev
-
 # misc
 .idea/
 .DS_Store
