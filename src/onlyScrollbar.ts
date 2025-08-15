@@ -345,7 +345,7 @@ class OnlyScrollbar {
          */
         const currentDamping = 1 - Math.exp(-this.options.damping * 60 * deltaTime * 0.001);
 
-        const position = +(this.position + currentDamping * (this.targetPosition - this.position)).toFixed(2);
+        const position = +(this.position + currentDamping * (this.targetPosition - this.position));
         this.lastPosition = this.position;
 
         if (this.lastPosition === position) {
