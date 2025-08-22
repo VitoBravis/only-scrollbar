@@ -18,13 +18,12 @@ class OnlyScrollbar {
     static ClassNames: ClassNames = {
         container: 'os-container',
         lock: 'os-container--locked',
-        back: 'os-container--back',
-        forward: 'os-container--forward',
         scrolling: 'os-container--scrolling'
     };
     static Attributes: Attributes = {
         anchor: 'data-os-anchor',
-        anchorId: 'data-os-anchor-id'
+        anchorId: 'data-os-anchor-id',
+        direction: 'data-os-direction'
     };
     static Events = {
         start: "os:start",
@@ -102,19 +101,6 @@ class OnlyScrollbar {
      */
     public get direction(): Direction {
         return <Direction>(Math.sign(this.position - this.lastPosition) || this.lastDirection || -1);
-    }
-
-    /**
-     * @description Обновление направления скрола. Также устанавливает на scrollContainer атрибут data-os-direction
-     * @description Вызывается автоматически на скрол, но можно вызывать вручную на случай непредвиденных ошибок
-     */
-    public updateDirection(): void {
-        const direction = this.direction;
-        if (direction !== this.lastDirection) {
-            this.lastDirection = direction;
-            this.toggleDirectionClass();
-            emit(this.eventContainer, OnlyScrollbar.Events.change);
-        }
     }
 
     /**
@@ -211,6 +197,7 @@ class OnlyScrollbar {
         this.rafID = null;
         this.scrollContainer.style.removeProperty('overflow');
         this.scrollContainer.classList.remove(...Object.values(OnlyScrollbar.ClassNames));
+        this.scrollContainer.removeAttribute(OnlyScrollbar.Attributes.direction);
 
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.removeEventListener("scroll", this.onScroll);
@@ -220,7 +207,7 @@ class OnlyScrollbar {
     private init(): void {
         this.scrollContainer.style.overflow = 'auto';
         this.scrollContainer.style.scrollBehavior = 'auto';
-        this.scrollContainer.classList.add(OnlyScrollbar.ClassNames.container, OnlyScrollbar.ClassNames.back);
+        this.scrollContainer.setAttribute(OnlyScrollbar.Attributes.direction, 'back');
         this.sync();
 
         this.initEvents();
@@ -330,9 +317,20 @@ class OnlyScrollbar {
         this.targetPosition = Math.max(Math.min(this.targetPosition + distance, this.scrollContainer[this.fields.scrollSize] - this.scrollContainer[this.fields.clientSize] + MARGIN_ERROR), -MARGIN_ERROR)
     }
 
-    private toggleDirectionClass(): void {
-        this.scrollContainer.classList.toggle(OnlyScrollbar.ClassNames.forward);
-        this.scrollContainer.classList.toggle(OnlyScrollbar.ClassNames.back);
+    /**
+     * @description Обновление направления скрола. Также устанавливает на scrollContainer атрибут data-os-direction
+     */
+    private updateDirection(): void {
+        const direction = this.direction;
+        if (direction !== this.lastDirection) {
+            this.lastDirection = direction;
+            this.toggleDirectionAttr(direction);
+            emit(this.eventContainer, OnlyScrollbar.Events.change);
+        }
+    }
+
+    private toggleDirectionAttr(direction: Direction): void {
+        this.scrollContainer.setAttribute(OnlyScrollbar.Attributes.direction, direction < 0 ? 'back' : 'forward');
     }
 
     private tick = (time: number): void => {

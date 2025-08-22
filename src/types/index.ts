@@ -1,7 +1,7 @@
 export declare type ElementOrSelector = HTMLElement | Window | string;
-export declare type ClassNamesKeys = 'container' | 'lock' | 'scrolling' | 'back' | 'forward';
+export declare type ClassNamesKeys = 'container' | 'lock' | 'scrolling';
 export declare type ClassNames = Record<ClassNamesKeys, string>;
-export declare type AttributesKeys = 'anchor' | 'anchorId';
+export declare type AttributesKeys = 'anchor' | 'anchorId' | 'direction';
 export declare type Attributes = Record<AttributesKeys, string>;
 /**
  * @description Направление скрола
@@ -52,45 +52,4 @@ export interface OnlyScrollbarOptions {
      * @default Y
      */
     axis?: Axis;
-}
-
-export interface IOnlyScrollbar {
-    readonly scrollContainer: HTMLElement;
-    readonly eventContainer: HTMLElement | Window;
-    readonly axis: Axis;
-    readonly damping: number;
-    readonly speed: number;
-    readonly setTargetPosition: (e: WheelEvent) => void;
-    readonly tick: FrameRequestCallback;
-    readonly direction: Direction;
-    isLocked: boolean;
-    position: number;
-    targetPosition: number;
-    easedPosition: number;
-    lastPosition: number;
-    syncTo?: NodeJS.Timeout;
-    rafID: number | null;
-    lastDirection: Direction | null;
-    isDisable: boolean;
-
-    updateDirection(): void;
-    sync(): void;
-    stop(): void;
-    scrollTo(position: Partial<number>): void;
-    setValue(position: Partial<number>): void;
-    lock(): void;
-    unlock(): void;
-    addEventListener(type: OnlyScrollbarEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): void;
-    removeEventListener(type: OnlyScrollbarEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject): void;
-    destroy(): void;
-
-    init(): void
-    initEvents(): void;
-    onScroll(e: Event): void;
-    onWheel(e: Event): void;
-    syncPos(): void;
-    checkSyncTo(): void;
-    manageParentScrollbars(currentTarget: HTMLElement): void;
-    disable(): void;
-    enable(): void;
 }

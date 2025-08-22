@@ -6,6 +6,8 @@
 /demo
 /docs
 
+/dev/*.mjs
+
 # misc
 .idea/
 .DS_Store

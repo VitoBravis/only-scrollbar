@@ -1,3 +1,6 @@
 import './demo';
-import './styles.css';
+import './scss/common.scss';
+import './scss/components.scss';
+
+
 
