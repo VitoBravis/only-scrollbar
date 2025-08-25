@@ -68,20 +68,6 @@ const scroll = new OnlyScrollbar('#scroll-container-id', {
 });
 ```
 
-## Примеры использования:
-
-### damping
-
-### eventContainer
-
-### speed
-
-### anchors
-
-### axis
-
-### listenAxis
-
 ## API
 
 Для обращения к свойствам и методам класса `OnlyScrollbar`, требуется создать экземпляр класса
