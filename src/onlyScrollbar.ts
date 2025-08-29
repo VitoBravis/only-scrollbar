@@ -143,7 +143,6 @@ class OnlyScrollbar {
 
     public scrollIntoView(element: HTMLElement, offset: number = 0): void {
         const targetPosition = this.position + element.getBoundingClientRect()[this.fields.offset] - offset;
-        console.log(this.position, element.getBoundingClientRect()[this.fields.offset], offset, this.fields.offset, element);
         this.scrollTo(targetPosition);
     }
 
