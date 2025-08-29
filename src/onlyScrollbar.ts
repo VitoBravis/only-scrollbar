@@ -143,6 +143,7 @@ class OnlyScrollbar {
 
     public scrollIntoView(element: HTMLElement, offset: number = 0): void {
         const targetPosition = this.position + element.getBoundingClientRect()[this.fields.offset] - offset;
+        console.log(this.position, element.getBoundingClientRect()[this.fields.offset], offset, this.fields.offset, element);
         this.scrollTo(targetPosition);
     }
 
@@ -247,6 +248,7 @@ class OnlyScrollbar {
     }
 
     private handleNativeAnchors = (e: Event): void => {
+        this.stop();
         const target = <HTMLElement>e.target;
         if (!(target instanceof HTMLAnchorElement)) {
             return;
@@ -263,6 +265,7 @@ class OnlyScrollbar {
         }
 
         this.scrollIntoView(targetAnchor, this.options.anchors.offset);
+        window.location.hash = target.hash;
     }
 
     private onScroll = (e: Event): void => {

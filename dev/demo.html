@@ -136,13 +136,6 @@ const scroll = new OnlyScrollbar('#scroll-container-id', {
     }
 });
 </code></pre>
-<h2 id="-3">Примеры использования:</h2>
-<h3 id="damping">damping</h3>
-<h3 id="eventcontainer">eventContainer</h3>
-<h3 id="speed">speed</h3>
-<h3 id="anchors">anchors</h3>
-<h3 id="axis">axis</h3>
-<h3 id="listenaxis">listenAxis</h3>
 <h2 id="api">API</h2>
 <p>Для обращения к свойствам и методам класса <code>OnlyScrollbar</code>, требуется создать экземпляр класса</p>
 <pre><code class="ts language-ts">import OnlyScrollbar from 'only-scrollbar';
@@ -186,7 +179,7 @@ scroll.destroy();
 <li><a href="#oslock">os:lock</a></li>
 <li><a href="#osunlock">os:unlock</a></li></ul></li>
 </ul>
-<h3 id="-4">Свойства</h3>
+<h3 id="-3">Свойства</h3>
 <h4 id="onlyscrollbarattributes">OnlyScrollbar.Attributes</h4>
 <p>Статичное поле класса. Содержит названия, используемых data-атрибутов</p>
 <h4 id="onlyscrollbarlassnames">OnlyScrollbar.СlassNames</h4>
@@ -230,7 +223,7 @@ scroll.destroy();
 <pre><code class="ts language-ts">type Direction = 1 | -1
 </code></pre>
 <p>Возвращает текущее направление скрола в числовом представлении: <code>1 = Down/Right</code>, <code>-1 = Up/Left</code>  </p>
-<h3 id="-5">Методы</h3>
+<h3 id="-4">Методы</h3>
 <h4 id="onlyscrollbarscrollto">OnlyScrollbar.scrollTo</h4>
 <pre><code class="ts language-ts">scroll.scrollTo(position: number): void
 </code></pre>
@@ -388,7 +381,7 @@ scroll.removeEventListener('scrollEnd', scrollEndHandler);
 <pre><code class="ts language-ts">scroll.destroy(): void
 </code></pre>
 <p>Очистка событий, таймеров, классов и атрибутов</p>
-<h3 id="-6">События</h3>
+<h3 id="-5">События</h3>
 <h4 id="osstart">os:start</h4>
 <p>Начало процесса плавного скрола</p>
 <h4 id="osend">os:end</h4>
