@@ -6,10 +6,13 @@ const path = require('path');
 
 module.exports = {
     mode: "production",
-    entry: "./dev/demo.js",
+    entry: "./dev/demo.ts",
     output: {
         path: path.join(__dirname, 'docs'),
         filename: 'main.js'
+    },
+    resolve: {
+        extensions: [ '.ts', '.js' ]
     },
     plugins: [
         new HtmlWebpackPlugin({
@@ -27,6 +30,10 @@ module.exports = {
     },
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+            },
             {
                 test: /\.css$/i,
                 use: [MiniCssExtractPlugin.loader, "css-loader"],

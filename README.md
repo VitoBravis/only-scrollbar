@@ -22,22 +22,38 @@ const scroll = new OnlyScrollbar(document.querySelector('.scroll-container'));
 
 Контейнер, в котором будет проинициализирован скрол должен придерживаться тех же правил, что и обычный скрол-контейнер:
 - Контейнер должен быть ограничен по высоте
-- Значение *css*-правила `overflow` в данном случае необязательно, т.к. правило `overflow: auto` добавляется автоматически
+- Значение *css*-правила `overflow` в данном случае необязательно, так как правило `overflow: auto` добавляется автоматически
 
 Конструктор класса `OnlyScrollbar` принимает до двух аргументов:
 
-| argument | type | description |
-| :------: | :--: | :---------- |
-| element | `HTMLHtmlElement \| Element \| Window \| string \| null \| undefined` | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является основным контейнером внутри котрого происходит скрол и все расчеты |
-| element | `OnlyScrollbarOptions \| undefined` | Параметры инициализации |
+| argument |                                 type                                  | description                                                                                                                                                     |
+|:--------:|:---------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| element  | `HTMLHtmlElement \| Element \| Window \| string \| null \| undefined` | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является основным контейнером внутри которого происходит скрол и все расчеты |
+| element  |                  `OnlyScrollbarOptions \| undefined`                  | Параметры инициализации                                                                                                                                         |
 
 ## Возможные параметры инициализации (OnlyScrollbarOptions)
 
-| parameter | type | default | description |
-| :-------: | :--: | :-----: | :---------- |
-| damping | `number` | `1` | Сила замедления инерции. Рекомендуется указывать значения в промежутке от 0 до 1 |
-| eventContainer | `HTMLHtmlElement \| Element \| Window \| string` | scrollContainer | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является элементом, который будет обрабатывать события, предназначавшиеся скрол контейнеру. По умолчанию равен основному скрол контейнеру |
-| mode | `"vertical" | "horizontal" | "free"` | `"vertical"` | Допустимое направление скрола 
+|   parameter    |                       type                       | description                                                                                                                                                                                                                  |
+|:--------------:|:------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|    damping     |                     `number`                     | Сила замедления инерции. Рекомендуется указывать значения в промежутке от 0 до 1. Значение по умолчанию 1                                                                                                                    |
+| eventContainer | `HTMLHtmlElement \| Element \| Window \| string` | HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является элементом, который будет обрабатывать события, предназначавшиеся скрол контейнеру. По умолчанию равен основному скрол контейнеру |
+|     speed      |                     `number`                     | Модификатор скорости для колесика мыши. Значение по умолчанию 1                                                                                                                                                              |
+|    anchors     |                  AnchorsOptions                  | Дополнительные опции для ссылок-якорей. По умолчанию включена обработка нативных браузерных якорей через хэш в ссылках                                                                                                       |
+|      axis      |                    `Y` \| `X`                    | Направление скрола. По умолчанию `Y`                                                                                                                                                                                         |
+|   listenAxis   |                    `Y` \| `X`                    | Ось, которая будет прослушиваться обработчиком событий. По умолчанию совпадает со значением параметра `axis`                                                                                                                 |
+
+
+## Возможные параметры для настройки ссылок-якорей
+|    parameter    |         type         | description                                                                                                                                                                               |
+|:---------------:|:--------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|     offset      |       `number`       | Отступ от верхней границы экрана в пикселях. По умолчанию 0                                                                                                                               |
+| stopPropagation |      `boolean`       | Предотвращает всплытие события `click`. По умолчанию `false`                                                                                                                              |
+|     active      |      `boolean`       | Определяет наличие обработки ссылок-якорей. По умолчанию `true`                                                                                                                           |
+|      root       |    `HTMLElement`     | Определяет элемент, внутри которого будет обрабатываться событие `click` по якорям. Полезно, если якоря находятся за пределами `scrollContainer`. По умолчанию является `scrollContainer` |
+|      type       | `native` \| `custom` | Позволяет выбрать тип обработки якорей. По умолчанию `native`                                                                                                                             |
+
+В случае использования `type: 'custom'` необходимо использовать атрибуты `data-os-anchor` и `data-os-anchor-id`. Элементы с одинаковыми значениями таких атрибутов будут обрабатываться аналогично стандартному браузерному поведению с атрибутами `href` и `id`
+
 
 ```ts
 import OnlyScrollbar from 'only-scrollbar';
@@ -45,7 +61,10 @@ import OnlyScrollbar from 'only-scrollbar';
 const scroll = new OnlyScrollbar('#scroll-container-id', {
     damping: 0.8,
     eventContainer: window,
-    mode: 'free'
+    anchors: {
+        type: 'custom',
+        offset: 200
+    }
 });
 ```
 
@@ -61,43 +80,52 @@ scroll.destroy();
 ```
 
 - Свойства
-    - [OnlyScrollbar.classNames](#OnlyScrollbarclassNames)
-    - [OnlyScrollbar.scrollContainer](#OnlyScrollbarscrollContainer)
-    - [OnlyScrollbar.eventContainer](#OnlyScrollbareventContainer)
-    - [OnlyScrollbar.isLocked](#OnlyScrollbarisLocked)
-    - [OnlyScrollbar.direction](#OnlyScrollbardirection)
-    - [OnlyScrollbar.position](#OnlyScrollbarposition)
+    - [OnlyScrollbar.Attributes](#onlyscrollbarattributes)
+    - [OnlyScrollbar.ClassNames](#onlyscrollbarclassnames)
+    - [OnlyScrollbar.Events](#onlyscrollbarevents)
+    - [OnlyScrollbar.scrollContainer](#onlyscrollbarscrollcontainer)
+    - [OnlyScrollbar.eventContainer](#onlyscrollbareventcontainer)
+    - [OnlyScrollbar.options](#onlyscrollbaroptions)
+    - [OnlyScrollbar.isLocked](#onlyscrollbarislocked)
+    - [OnlyScrollbar.position](#onlyscrollbarposition)
+    - [OnlyScrollbar.direction](#onlyscrollbardirection)
+    - [OnlyScrollbar.isStart](#onlyscrollbarisstart)
+    - [OnlyScrollbar.isEnd](#onlyscrollbarisend)
+    - [OnlyScrollbar.isScrolling](#onlyscrollbarisscrolling)
 
 - Методы
-    - [OnlyScrollbar.sync](#OnlyScrollbarsync)
-    - [OnlyScrollbar.scrollTo](#OnlyScrollbarscrollTo)
-    - [OnlyScrollbar.setValue](#OnlyScrollbarsetValue)
-    - [OnlyScrollbar.stop](#OnlyScrollbarstop)
-    - [OnlyScrollbar.lock](#OnlyScrollbarlock)
-    - [OnlyScrollbar.unlock](#OnlyScrollbarunlock)
-    - [OnlyScrollbar.addEventListener](#OnlyScrollbaraddEventListener)
-    - [OnlyScrollbar.removeEventListener](#OnlyScrollbarremoveEventListener)
-    - [OnlyScrollbar.destroy](#OnlyScrollbardestroy)
+    - [OnlyScrollbar.scrollTo](#onlyscrollbarscrollto)
+    - [OnlyScrollbar.scrollIntoView](#onlyscrollbarscrollintoview)
+    - [OnlyScrollbar.setValue](#onlyscrollbarsetvalue)
+    - [OnlyScrollbar.stop](#onlyscrollbarstop)
+    - [OnlyScrollbar.lock](#onlyscrollbarlock)
+    - [OnlyScrollbar.unlock](#onlyscrollbarunlock)
+    - [OnlyScrollbar.addEventListener](#onlyscrollbaraddeventlistener)
+    - [OnlyScrollbar.removeEventListener](#onlyscrollbarremoveeventlistener)
+    - [OnlyScrollbar.destroy](#onlyscrollbardestroy)
     
 - События
-    - [scrollEnd](#scrollEnd)
-    - [changeDirectionY](#changeDirectionY)
-    - [changeDirectionX](#changeDirectionX)
+    - [os:start](#osstart)
+    - [os:stop](#osstop)
+    - [os:change](#oschange)
+    - [os:reachEnd](#osreachend)
+    - [os:reachStart](#osreachstart)
+    - [os:lock](#oslock)
+    - [os:unlock](#osunlock)
 
 ### Свойства
 
-#### OnlyScrollbar.classNames
+#### OnlyScrollbar.Attributes
 
-- Type: `ClassNames`
+Статичное поле класса. Содержит названия, используемых data-атрибутов
 
-Перечень основных *css*-классов, которые добавляются на `scrollContainer`
+#### OnlyScrollbar.СlassNames
 
-```ts
-type ClassName = {
-    container: string;
-    lock: string;
-}
-```
+Статичное поле класса. Содержит перечень основных *css*-классов, которые добавляются на `scrollContainer`
+
+#### OnlyScrollbar.Events
+
+Статичное поле класса. Содержит названия, кастомных js-событий
 
 #### OnlyScrollbar.scrollContainer
 
@@ -107,7 +135,7 @@ type ClassName = {
 
 > Для того чтобы применить плавный скрол для всей страницы, в качестве контейнера достаточно указать объект `window` или `document.scrollingElement`
 > 
-> Объект `window` не может быть контейнером для скрола, но вмето него будет установлен `document.scrollingElement`
+> Объект `window` не может быть контейнером для скрола, но вместо него будет установлен `document.scrollingElement`
 
 #### OnlyScrollbar.eventContainer
 
@@ -117,6 +145,10 @@ type ClassName = {
 
 > В отличие от `scrollContainer` может быть объектом `window`, но не `document.scrollingElement`
 
+#### OnlyScrollbar.options
+
+Хранит параметры инициализации 
+
 #### OnlyScrollbar.isLocked
 
 - Type: `boolean`
@@ -125,60 +157,74 @@ type ClassName = {
 
 Заблокированный скрол не позволяет выполняться событиям синхронизации и событиям для перерасчета позиции. Не блокирует скрол на touch-устройствах
 
+#### OnlyScrollbar.position
+
+- Type: `number`
+
+Текущее значение позиции скрола. Значение поля `scrollTop` или `scrollLeft` в зависимости от направления скрола 
+
 #### OnlyScrollbar.direction
 
 - Type: `Direction`
 ```ts
-type Direction = {
-    x: 1 | -1;
-    y: 1 | -1;
-}
+type Direction = 1 | -1
 ```
 
-Последнее направление скрола. 
+Возвращает текущее направление скрола в числовом представлении: `1 = Down/Right`, `-1 = Up/Left`
 
-Возвращает объект с полями y и x, где `1 = Down/Right`, `-1 = Up/Left`
+#### OnlyScrollbar.isStart
 
-#### OnlyScrollbar.position
+- Type: `boolean`
 
-- Type: `Delta2D`
+Возвращает true, если текущая позиция = 0
 
-```ts
-type Delta2D = {
-    x: number;
-    y: number;
-}
-```
+#### OnlyScrollbar.isEnd
 
-Текущее значение позиции скрола
+- Type: `boolean`
+
+Возвращает true, если текущая позиция совпадает с максимально возможной позицией внутри скрол-контейнера  
+
+#### OnlyScrollbar.isScrolling
+
+- Type: `boolean`
+
+Возвращает true, если в данный момент выполняется плавный скрол
 
 ### Методы
-
-#### OnlyScrollbar.sync
-
-```ts
-scroll.sync(): void
-```
-
-Синхронизация всех значений, которые используются для расчета позиций
-
-Вызывается автоматически по окончанию событий скрола, но можно вызвать вручную для преждевременной синхронизации и обнуления анимации
 
 #### OnlyScrollbar.scrollTo
 
 ```ts
-scroll.scrollTo(position: Delta2D): void
+scroll.scrollTo(position: number): void
 ```
 
-| argument | type | description |
-| :------: | :--: | :---------- |
-| `position` | `Delta2D` | Объект с целевыми координатами x и y |
+|  argument  |   type   | description            |
+|:----------:|:--------:|:-----------------------|
+| `position` | `number` | Целевая позиция скрола |
 
 Плавный скрол до конкретной позиции, с применением стандартных расчетов для вычисления промежуточных значений
 
 Example:
 ```ts
-scroll.scrollTo({x: 0, y: document.querySelector('#anchor').offsetTop});
+scroll.scrollTo(600);
+```
+
+#### OnlyScrollbar.scrollIntoView
+
+```ts
+scroll.scrollIntoView(element: HTMLElement, offset?: number): void
+```
+| argument  |     type      | description                        |
+|:---------:|:-------------:|:-----------------------------------|
+| `element` | `HTMLElement` | Целевой HTML-элемент               |
+| `offset`  |   `number`    | Смещение скрола (По умолчанию = 0) |
+
+Плавный скрол до переданного элемента с применением дополнительного отступа, если такой необходим
+
+Example:
+```ts
+const targetElement = document.querySelector('#target');
+scroll.scrollIntoView(targetElement, 200);
 ```
 
 #### OnlyScrollbar.setValue
@@ -187,15 +233,15 @@ scroll.scrollTo({x: 0, y: document.querySelector('#anchor').offsetTop});
 scroll.setValue(value: number): void
 ```
 
-| argument | type | description |
-| :------: | :--: | :---------- |
-| `position` | `Delta2D` | Объект с целевыми координатами x и y |
+| argument |   type   | description            |
+|:--------:|:--------:|:-----------------------|
+| `value`  | `number` | Целевая позиция скрола |
 
-Установка конкретного значения скрол позиции, без применения каких-либо анимаций
+Установка конкретного значения позиции скрола, без применения каких-либо анимаций
 
 Example:
 ```ts
-scroll.setValue({x: 0, y: document.querySelector('#anchor').offsetTop});
+scroll.setValue(600);
 ```
 
 #### OnlyScrollbar.stop
@@ -204,7 +250,7 @@ scroll.setValue({x: 0, y: document.querySelector('#anchor').offsetTop});
 scroll.stop(): void
 ```
 
-Останавливает анимацию скрола на текущей позиции
+Останавливает скрол на текущей позиции
 
 #### OnlyScrollbar.lock
 
@@ -214,7 +260,7 @@ scroll.lock(): void
 
 Блокирует скрол
 
-Блокировка также прервет запущенные процессы по перерасчету позиции
+Блокировка также вызовет метод `stop`
 
 #### OnlyScrollbar.unlock
 
@@ -224,19 +270,17 @@ scroll.unlock(): void
 
 Разблокирует скрол.
 
-Запускает перерасчет позиции скрола
-
 #### OnlyScrollbar.addEventListener
 
 ```ts
 scroll.addEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler, options: AddEventListenerOptions): void
 ```
 
-| argument | type | description |
-| :------: | :--: | :---------- |
-| `type` | `OnlyScrollbarEvents` | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
-| `eventHandler` | `EventHandler` | Функция обработчик события |
-| `options` | `AddEventListenerOptions` | Параметры обработчика события |
+|    argument    |           type            | description                                                                                   |
+|:--------------:|:-------------------------:|:----------------------------------------------------------------------------------------------|
+|     `type`     |   `OnlyScrollbarEvents`   | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
+| `eventHandler` |      `EventHandler`       | Функция обработчик события                                                                    |
+|   `options`    | `AddEventListenerOptions` | Параметры обработчика события                                                                 |
 
 Добавляет обработчик события на eventContainer
 
@@ -253,10 +297,10 @@ scroll.addEventListener('scrollEnd', scrollEndHandler, { once: true });
 scroll.removeEventListener(type: OnlyScrollbarEvents, eventHandler: EventHandler): void
 ```
 
-| argument | type | description |
-| :------: | :--: | :---------- |
-| `type` | `OnlyScrollbarEvents` | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
-| `eventHandler` | `EventHandler` | Функция обработчик события |
+|    argument    |         type          | description                                                                                   |
+|:--------------:|:---------------------:|:----------------------------------------------------------------------------------------------|
+|     `type`     | `OnlyScrollbarEvents` | Название события. Возможно использовать стандарные события браузера или события OnlyScrollbar |
+| `eventHandler` |    `EventHandler`     | Функция обработчик события                                                                    |
 
 Удаляет существующий обработчик события на eventContainer
 
@@ -277,14 +321,30 @@ scroll.destroy(): void
 
 ### События
 
-#### scrollEnd
+#### os:start
 
-Остановка скрола и прекращение всех действий по расчету позиций
+Начало процесса плавного скрола
 
-#### changeDirectionY
+#### os:end
 
-Изменение направления скрола по оси Y
+Завершение процесса плавного скрола
 
-#### changeDirectionX
+#### os:change
 
-Изменение направления скрола по оси X
+Изменение направления скрола 
+
+#### os:reachEnd
+
+Достижение нижней/правой границы скрол-контейнера
+
+#### os:reachStart
+
+Достижение верхней/левой границы скрол-контейнера
+
+#### os:lock
+
+Блокировка скрола
+
+#### os:unlock
+
+Разблокировка скрола

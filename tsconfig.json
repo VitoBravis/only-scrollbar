@@ -4,11 +4,11 @@
         "module": "commonjs",
         "allowJs": true,
         "declaration": true,
-        "emitDeclarationOnly": true,
         "outDir": "./dist",
+        "noEmit": false,
         "strict": true,
-        "declarationMap": true
+        "declarationMap": false
     },
-    "include": ["src/onlyScrollbar.js"],
+    "include": ["src"],
     "exclude": ["node_modules"]
 }

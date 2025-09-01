@@ -6,8 +6,7 @@
 /demo
 /docs
 
-# development
-/dev
+/dev/*.mjs
 
 # misc
 .idea/
