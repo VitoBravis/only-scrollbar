@@ -288,9 +288,12 @@ class OnlyScrollbar {
         // @ts-ignore
         this.setTargetPosition(e);
 
-        this.overscrollPropagation(e);
+        const scrollingOverEdges = (this.isStart && this.targetPosition < this.position) || (this.isEnd && this.targetPosition > this.position);
+        if (!scrollingOverEdges) {
+            e.stopPropagation();
+        }
 
-        if (this.rafID === null) {
+        if (this.rafID === null && !scrollingOverEdges) {
             requestAnimationFrame(this.onFirstTick)
         }
     }

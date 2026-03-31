@@ -1,6 +1,6 @@
 {
     "name": "only-scrollbar",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "smooth-scroll",
     "main": "dist/onlyScrollbar.js",
     "types": "dist/onlyScrollbar.d.ts",
@@ -9,7 +9,10 @@
         "dev": "npm run md && webpack serve --config webpack.config.dev.js",
         "demo": "npm run md && webpack --config webpack.config.demo.js && gh-pages -d docs",
         "md": "node showdown.js",
-        "prepublishOnly": "npm run build"
+        "prepublishOnly": "npm run build",
+        "version:patch": "npm version patch --force --no-git-tag-version",
+        "version:minor": "npm version minor --force --no-git-tag-version",
+        "version:major": "npm version major --force --no-git-tag-version"
     },
     "repository": {
         "type": "git",
