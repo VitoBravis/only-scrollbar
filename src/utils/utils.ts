@@ -26,3 +26,11 @@ export const getFieldsByAxis = (axis: Axis, listenAxis: Axis): InternalFields =>
         delta: listenAxis === 'Y' ? 'deltaY' : 'deltaX'
     }
 }
+
+export const debounce = (callback: Function, delay: number) => {
+    let timer: NodeJS.Timeout;
+    return (...args: any[]) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => callback(args), delay);
+    }
+}

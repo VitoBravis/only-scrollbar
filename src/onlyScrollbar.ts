@@ -1,4 +1,4 @@
-import {emit, findElementBySelector, getFieldsByAxis} from "./utils/utils";
+import {debounce, emit, findElementBySelector, getFieldsByAxis} from "./utils/utils";
 import {DEFAULT_OPTIONS, IS_TOUCH_DEVICE, MARGIN_ERROR} from "./utils/const";
 import {
     Attributes,
@@ -60,6 +60,7 @@ class OnlyScrollbar {
     private rafID: number | null;
     private lastDirection: Direction | null;
     private fields: InternalFields;
+    private resizeObserver: ResizeObserver;
 
     constructor(element: ElementOrSelector | null | undefined, options: OnlyScrollbarOptions = DEFAULT_OPTIONS) {
         const _scrollContainer = findElementBySelector(element);
@@ -90,6 +91,7 @@ class OnlyScrollbar {
             damping: (options?.damping ?? DEFAULT_OPTIONS.damping) * 0.1
         }
         this.fields = getFieldsByAxis(this.options.axis, this.options.listenAxis);
+        this.resizeObserver = new ResizeObserver(debounce(() => this.checkEdges(), 300));
 
         this.stop = this.stop.bind(this);
 
@@ -202,6 +204,7 @@ class OnlyScrollbar {
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.removeEventListener("scroll", this.onScroll);
         this.eventContainer.removeEventListener("wheel", this.onWheel);
+        this.resizeObserver.unobserve(this.scrollContainer);
     }
 
     private init(): void {
@@ -218,6 +221,7 @@ class OnlyScrollbar {
         const scrollingElement = this.scrollContainer === document.documentElement ? window : this.scrollContainer;
         scrollingElement.addEventListener("scroll", this.onScroll, { passive: true });
         this.addEventListener("wheel", this.onWheel, { passive: false });
+        this.resizeObserver.observe(this.scrollContainer);
         if (this.options.anchors.active) {
             const clickHandler = (this.options.anchors.type === 'native') ? this.handleNativeAnchors : this.handleCustomAnchors;
             this.options.anchors.root!.addEventListener("click", clickHandler);
@@ -386,8 +390,6 @@ class OnlyScrollbar {
     }
 
     private checkEdges(): void {
-        if (this.isEnd || this.isStart) return;
-
         const {
             [this.fields.scrollOffset]: scrollOffset,
             [this.fields.clientSize]: clientSize,
@@ -395,15 +397,15 @@ class OnlyScrollbar {
         } = this.scrollContainer
 
         const isStart = scrollOffset === 0;
+        this.isStart = isStart;
         if (isStart) {
-            this.isStart = isStart;
             emit(this.eventContainer, OnlyScrollbar.Events.reachStart);
             return;
         }
 
         const isEnd = scrollSize - clientSize === scrollOffset;
+        this.isEnd = isEnd;
         if (isEnd) {
-            this.isEnd = isEnd;
             emit(this.eventContainer, OnlyScrollbar.Events.reachEnd);
         }
     }
