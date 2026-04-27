@@ -49,10 +49,11 @@ class OnlyScrollbar {
      * @description Состояние, отображающее блокировку скрола
      */
     public isLocked: boolean;
-    public position: number;
     public isStart: boolean;
     public isEnd: boolean;
     public isScrolling: boolean;
+    private easedPosition: number;
+    private lastEasedPosition: number;
     private targetPosition: number;
     private prevTickTime: number;
     private lastPosition: number;
@@ -72,9 +73,10 @@ class OnlyScrollbar {
         const _eventContainer = findElementBySelector(options?.eventContainer) ?? this.scrollContainer;
         this.eventContainer = _eventContainer === document.scrollingElement ? window : _eventContainer;
 
-        this.position = 0;
+        this.easedPosition = 0;
         this.targetPosition = 0;
         this.lastPosition = 0;
+        this.lastEasedPosition = 0;
         this.prevTickTime = 0;
         this.lastDirection = null;
         this.isLocked = false;
@@ -102,7 +104,11 @@ class OnlyScrollbar {
      * @description 1 = Forward, -1 = Back
      */
     public get direction(): Direction {
-        return <Direction>(Math.sign(this.position - this.lastPosition) || this.lastDirection || -1);
+        return <Direction>(Math.sign(this.scrollContainer[this.fields.scrollOffset] - this.lastPosition) || this.lastDirection || -1);
+    }
+
+    public get position(): number {
+        return this.scrollContainer[this.fields.scrollOffset];
     }
 
     /**
@@ -279,6 +285,7 @@ class OnlyScrollbar {
 
         this.checkSyncTo();
         this.updateDirection();
+        this.lastPosition = this.scrollContainer[this.fields.scrollOffset];
     }
 
     private onWheel = (e: Event) => {
@@ -352,15 +359,15 @@ class OnlyScrollbar {
          */
         const currentDamping = 1 - Math.exp(-this.options.damping * 60 * deltaTime * 0.001);
 
-        const position = +(this.position + currentDamping * (this.targetPosition - this.position));
-        this.lastPosition = this.position;
+        const position = +(this.easedPosition + currentDamping * (this.targetPosition - this.easedPosition));
+        this.lastEasedPosition = this.easedPosition;
 
-        if (this.lastPosition === position) {
+        if (this.lastEasedPosition === position) {
             this.stop();
             return;
         }
 
-        this.position = position;
+        this.easedPosition = position;
         this.setValue(position);
         this.rafID = requestAnimationFrame(this.tick);
     }
@@ -379,7 +386,7 @@ class OnlyScrollbar {
         const currentPosition = this.scrollContainer[this.fields.scrollOffset];
         this.targetPosition = currentPosition;
         this.lastPosition = currentPosition;
-        this.position = currentPosition;
+        this.easedPosition = currentPosition;
     }
 
     private checkSyncTo() {
