@@ -104,11 +104,11 @@ class OnlyScrollbar {
      * @description 1 = Forward, -1 = Back
      */
     public get direction(): Direction {
-        return <Direction>(Math.sign(this.scrollContainer[this.fields.scrollOffset] - this.lastPosition) || this.lastDirection || -1);
+        return <Direction>(Math.sign(Math.max(0, this.scrollContainer[this.fields.scrollOffset]) - this.lastPosition) || this.lastDirection || -1);
     }
 
     public get position(): number {
-        return this.scrollContainer[this.fields.scrollOffset];
+        return Math.max(0, this.scrollContainer[this.fields.scrollOffset]);
     }
 
     /**
@@ -285,7 +285,7 @@ class OnlyScrollbar {
 
         this.checkSyncTo();
         this.updateDirection();
-        this.lastPosition = this.scrollContainer[this.fields.scrollOffset];
+        this.lastPosition = Math.max(0, this.scrollContainer[this.fields.scrollOffset]);
     }
 
     private onWheel = (e: Event) => {
@@ -383,7 +383,7 @@ class OnlyScrollbar {
     }
 
     private sync(): void {
-        const currentPosition = this.scrollContainer[this.fields.scrollOffset];
+        const currentPosition = Math.max(0, this.scrollContainer[this.fields.scrollOffset]);
         this.targetPosition = currentPosition;
         this.lastPosition = currentPosition;
         this.easedPosition = currentPosition;
