@@ -39,7 +39,7 @@ const scroll = new OnlyScrollbar(document.querySelector('.scroll-container'));
 <td style="text-align:left;">HTML-элемент или css-селектор, по которому будет найден первый подходящий элемент. Является основным контейнером внутри которого происходит скрол и все расчеты</td>
 </tr>
 <tr>
-<td style="text-align:center;">options</td>
+<td style="text-align:center;">element</td>
 <td style="text-align:center;"><code>OnlyScrollbarOptions | undefined</code></td>
 <td style="text-align:left;">Параметры инициализации</td>
 </tr>
@@ -136,6 +136,9 @@ const scroll = new OnlyScrollbar('#scroll-container-id', {
     }
 });
 </code></pre>
+<h2 id="-3">Предотвращение событий</h2>
+<p>Для предотвращения срабатывания события плавного скрола внутри конкретных элементов, например нативных скрол-контейнеров, необходимо использовать атрибут <code>data-os-ignore</code>.<br />
+Событие <code>wheel</code> внутри таких элементов не будут обрабатываться логикой плавного скрола и управление перейдет браузеру</p>
 <h2 id="api">API</h2>
 <p>Для обращения к свойствам и методам класса <code>OnlyScrollbar</code>, требуется создать экземпляр класса</p>
 <pre><code class="ts language-ts">import OnlyScrollbar from 'only-scrollbar';
@@ -168,6 +171,7 @@ scroll.destroy();
 <li><a href="#onlyscrollbarunlock">OnlyScrollbar.unlock</a></li>
 <li><a href="#onlyscrollbaraddeventlistener">OnlyScrollbar.addEventListener</a></li>
 <li><a href="#onlyscrollbarremoveeventlistener">OnlyScrollbar.removeEventListener</a></li>
+<li><a href="#onlyscrollbarrefreshignoreelements">OnlyScrollbar.refreshIgnoreElements</a></li>
 <li><a href="#onlyscrollbardestroy">OnlyScrollbar.destroy</a></li></ul></li>
 <li><p>События</p>
 <ul>
@@ -179,7 +183,7 @@ scroll.destroy();
 <li><a href="#oslock">os:lock</a></li>
 <li><a href="#osunlock">os:unlock</a></li></ul></li>
 </ul>
-<h3 id="-3">Свойства</h3>
+<h3 id="-4">Свойства</h3>
 <h4 id="onlyscrollbarattributes">OnlyScrollbar.Attributes</h4>
 <p>Статичное поле класса. Содержит названия, используемых data-атрибутов</p>
 <h4 id="onlyscrollbarlassnames">OnlyScrollbar.СlassNames</h4>
@@ -222,8 +226,23 @@ scroll.destroy();
 </ul>
 <pre><code class="ts language-ts">type Direction = 1 | -1
 </code></pre>
-<p>Возвращает текущее направление скрола в числовом представлении: <code>1 = Down/Right</code>, <code>-1 = Up/Left</code>  </p>
-<h3 id="-4">Методы</h3>
+<p>Возвращает текущее направление скрола в числовом представлении: <code>1 = Down/Right</code>, <code>-1 = Up/Left</code></p>
+<h4 id="onlyscrollbarisstart">OnlyScrollbar.isStart</h4>
+<ul>
+<li>Type: <code>boolean</code></li>
+</ul>
+<p>Возвращает true, если текущая позиция = 0</p>
+<h4 id="onlyscrollbarisend">OnlyScrollbar.isEnd</h4>
+<ul>
+<li>Type: <code>boolean</code></li>
+</ul>
+<p>Возвращает true, если текущая позиция совпадает с максимально возможной позицией внутри скрол-контейнера  </p>
+<h4 id="onlyscrollbarisscrolling">OnlyScrollbar.isScrolling</h4>
+<ul>
+<li>Type: <code>boolean</code></li>
+</ul>
+<p>Возвращает true, если в данный момент выполняется плавный скрол</p>
+<h3 id="-5">Методы</h3>
 <h4 id="onlyscrollbarscrollto">OnlyScrollbar.scrollTo</h4>
 <pre><code class="ts language-ts">scroll.scrollTo(position: number): void
 </code></pre>
@@ -377,11 +396,15 @@ scroll.addEventListener('scrollEnd', scrollEndHandler, { once: true });
 }
 scroll.removeEventListener('scrollEnd', scrollEndHandler);
 </code></pre>
+<h4 id="onlyscrollbarrefreshignoreelements">OnlyScrollbar.refreshIgnoreElements</h4>
+<pre><code class="ts language-ts">scroll.refreshIgnoreElements(): void
+</code></pre>
+<p>Проиводит повторный поиск игнорируемых элементов</p>
 <h4 id="onlyscrollbardestroy">OnlyScrollbar.destroy</h4>
 <pre><code class="ts language-ts">scroll.destroy(): void
 </code></pre>
 <p>Очистка событий, таймеров, классов и атрибутов</p>
-<h3 id="-5">События</h3>
+<h3 id="-6">События</h3>
 <h4 id="osstart">os:start</h4>
 <p>Начало процесса плавного скрола</p>
 <h4 id="osend">os:end</h4>

@@ -68,6 +68,11 @@ const scroll = new OnlyScrollbar('#scroll-container-id', {
 });
 ```
 
+## Предотвращение событий
+
+Для предотвращения срабатывания события плавного скрола внутри конкретных элементов, например нативных скрол-контейнеров, необходимо использовать атрибут `data-os-ignore`.  
+Событие `wheel` внутри таких элементов не будут обрабатываться логикой плавного скрола и управление перейдет браузеру
+
 ## API
 
 Для обращения к свойствам и методам класса `OnlyScrollbar`, требуется создать экземпляр класса
@@ -102,6 +107,7 @@ scroll.destroy();
     - [OnlyScrollbar.unlock](#onlyscrollbarunlock)
     - [OnlyScrollbar.addEventListener](#onlyscrollbaraddeventlistener)
     - [OnlyScrollbar.removeEventListener](#onlyscrollbarremoveeventlistener)
+    - [OnlyScrollbar.refreshIgnoreElements](#onlyscrollbarrefreshignoreelements)
     - [OnlyScrollbar.destroy](#onlyscrollbardestroy)
     
 - События
@@ -310,6 +316,14 @@ const scrollEndHandler = () => {
 }
 scroll.removeEventListener('scrollEnd', scrollEndHandler);
 ```
+
+#### OnlyScrollbar.refreshIgnoreElements
+
+```ts
+scroll.refreshIgnoreElements(): void
+```
+
+Проиводит повторный поиск игнорируемых элементов
 
 #### OnlyScrollbar.destroy
 

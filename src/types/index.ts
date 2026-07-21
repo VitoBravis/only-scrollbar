@@ -1,8 +1,4 @@
 export declare type ElementOrSelector = HTMLElement | Window | string;
-export declare type ClassNamesKeys = 'container' | 'lock' | 'scrolling';
-export declare type ClassNames = Record<ClassNamesKeys, string>;
-export declare type AttributesKeys = 'anchor' | 'anchorId' | 'direction';
-export declare type Attributes = Record<AttributesKeys, string>;
 /**
  * @description Направление скрола
  * @description 1 = Down|Right, -1 = Up|Left

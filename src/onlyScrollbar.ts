@@ -1,8 +1,6 @@
 import {debounce, emit, findElementBySelector, getFieldsByAxis} from "./utils/utils";
 import {DEFAULT_OPTIONS, IS_TOUCH_DEVICE, MARGIN_ERROR} from "./utils/const";
 import {
-    Attributes,
-    ClassNames,
     Direction,
     ElementOrSelector,
     InternalFields,
@@ -15,16 +13,17 @@ class OnlyScrollbar {
     /**
      * @description Объект со всеми css-классами, которые используются в скроле
      */
-    static ClassNames: ClassNames = {
+    static ClassNames = {
         container: 'os-container',
         lock: 'os-container--locked',
         scrolling: 'os-container--scrolling'
-    };
-    static Attributes: Attributes = {
+    } as const;
+    static Attributes = {
         anchor: 'data-os-anchor',
         anchorId: 'data-os-anchor-id',
-        direction: 'data-os-direction'
-    };
+        direction: 'data-os-direction',
+        ignore: 'data-os-ignore'
+    } as const;
     static Events = {
         start: "os:start",
         stop: "os:stop",
@@ -33,7 +32,7 @@ class OnlyScrollbar {
         reachStart: 'os:reachStart',
         lock: 'os:lock',
         unlock: 'os:unlock'
-    } as const
+    } as const;
     /**
      * @description HTML-элемент, который будет являться контейнером для скрола
      * @description Для корректной работы размеры контейнера должны быть ограничены
@@ -62,6 +61,7 @@ class OnlyScrollbar {
     private lastDirection: Direction | null;
     private fields: InternalFields;
     private resizeObserver: ResizeObserver;
+    private ignoreElements: HTMLElement[];
 
     constructor(element: ElementOrSelector | null | undefined, options: OnlyScrollbarOptions = DEFAULT_OPTIONS) {
         const _scrollContainer = findElementBySelector(element);
@@ -84,6 +84,7 @@ class OnlyScrollbar {
         this.isStart = true;
         this.isScrolling = false;
         this.rafID = null
+        this.ignoreElements = [];
         this.options = {
             anchors: {...DEFAULT_OPTIONS.anchors, ...{root: this.scrollContainer}, ...(options.anchors ?? {})},
             speed: options?.speed ?? DEFAULT_OPTIONS.speed,
@@ -191,6 +192,10 @@ class OnlyScrollbar {
         }
     }
 
+    public refreshIgnoreElements(): void {
+        this.ignoreElements = Array.from(this.scrollContainer.querySelectorAll(`[${OnlyScrollbar.Attributes.ignore}]`));
+    }
+
     public addEventListener(type: OnlyScrollbarEvents | keyof HTMLElementEventMap, listener: EventListenerOrEventListenerObject, options?: AddEventListenerOptions): void {
         this.eventContainer.addEventListener(type, listener, options);
     }
@@ -219,6 +224,7 @@ class OnlyScrollbar {
         this.scrollContainer.setAttribute(OnlyScrollbar.Attributes.direction, 'back');
         this.sync();
 
+        this.refreshIgnoreElements();
         this.initEvents();
     }
 
@@ -291,6 +297,10 @@ class OnlyScrollbar {
     private onWheel = (e: Event) => {
         // @ts-ignore
         if (e.ctrlKey) return;
+
+        if (this.ignoreElements.some((el) => el.contains(<HTMLElement>e.target))) {
+            return;
+        }
 
         e.preventDefault();
 
